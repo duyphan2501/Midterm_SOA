@@ -1,0 +1,50 @@
+version: "3.9"
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports: ["27017:27017"]
+    volumes:
+      - mongo_data:/data/db
+
+  gateway:
+    build: ./gateway
+    env_file: .env
+    ports: ["8000:8000"]
+    depends_on: [users, products, orders]
+    environment:
+      GATEWAY_PORT: ${GATEWAY_PORT}
+      USERS_TARGET: http://users:${USERS_PORT}
+      PRODUCTS_TARGET: http://products:${PRODUCTS_PORT}
+      ORDERS_TARGET: http://orders:${ORDERS_PORT}
+
+  users:
+    build: ./services/users
+    env_file: .env
+    environment:
+      PORT: ${USERS_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/usersdb
+    depends_on: [mongo]
+
+  products:
+    build: ./services/products
+    env_file: .env
+    environment:
+      PORT: ${PRODUCTS_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/productsdb
+    depends_on: [mongo]
+
+  orders:
+    build: ./services/orders
+    env_file: .env
+    environment:
+      PORT: ${ORDERS_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/ordersdb
+      PRODUCTS_URL: ${PRODUCTS_URL}
+    depends_on: [mongo, products]
+
+volumes:
+  mongo_data:
