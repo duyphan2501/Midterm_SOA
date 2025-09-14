@@ -4,16 +4,27 @@
   "workspaces": [
     "gateway",
     "services/users",
-    "services/products",
-    "services/orders"
+    "services/tuitions",
+    "services/payments"
   ],
   "scripts": {
+    "dev:gateway": "npm --workspace gateway run dev",
+    "dev:users": "npm --workspace services/users run dev",
+    "dev:tuitions": "npm --workspace services/tuitions run dev",
+    "dev:payments": "npm --workspace services/payments run dev",
+
     "start:gateway": "npm --workspace gateway run start",
     "start:users": "npm --workspace services/users run start",
-    "start:products": "npm --workspace services/products run start",
-    "start:orders": "npm --workspace services/orders run start"
+    "start:tuitions": "npm --workspace services/tuitions run start",
+    "start:payments": "npm --workspace services/payments run start",
+
+    "dev:all": "concurrently -n gateway,users,tuitions,payments -c green,blue,magenta,yellow \"npm run dev:gateway\" \"npm run dev:users\" \"npm run dev:tuitions\" \"npm run dev:payments\""
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "nodemon": "^3.1.0"
   }
 }
