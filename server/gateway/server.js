@@ -10,9 +10,9 @@ app.use(cors());
 app.use(morgan("tiny"));
 
 const PORT = process.env.GATEWAY_PORT || 8000;
-const USERS_TARGET = process.env.USERS_TARGET || "http://localhost:8001";
-const TUITIONS_TARGET = process.env.TUITIONS_TARGET || "http://localhost:8002";
-const PAYMENTS_TARGET = process.env.PAYMENTS_TARGET || "http://localhost:8003";
+const USERS_TARGET = process.env.USERS_URL || "http://localhost:8001";
+const TUITIONS_TARGET = process.env.TUITIONS_URL || "http://localhost:8002";
+const PAYMENTS_TARGET = process.env.PAYMENTS_URL || "http://localhost:8003";
 
 app.get("/health", (_, res) => res.json({ ok: true, service: "gateway" }));
 
