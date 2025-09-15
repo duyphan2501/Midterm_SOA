@@ -69,4 +69,28 @@ const createAccount = async (req, res, next) => {
   }
 };
 
-export { login, createAccount };
+const getUserInfo = async(req ,res, next) => {
+  try {
+      const {username} = req.params
+
+      if (!username)
+        throw new CreateError.BadRequest("Username is required")
+
+      const user = await UserModel.findOne({username})
+
+      if (!user)
+        throw new CreateError.NotFound("User does not exist")
+
+      return res.status(200).json({
+        user: {
+          ...user._doc,
+          password: undefined
+        },
+        success: true,
+      })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export { login, createAccount, getUserInfo };
