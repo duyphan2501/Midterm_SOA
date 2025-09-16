@@ -1,16 +1,12 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const paymentSchema = new mongoose.Schema(
   {
     paymentId: { type: String, required: true },
-    tuitionId: { type: mongoose.Schema.Types.ObjectId, ref: "Tuition" },
+    tuitionId: { type: String, required: true },
     otpCode: String,
     otpExpireAt: Date,
-    payer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    payerId: { type: String, required: true },
     status: {
       type: String,
       enum: ["PENDING", "SUCCESS", "FAILED"],
@@ -20,4 +16,4 @@ const paymentSchema = new mongoose.Schema(
   { timestamps: true, collection: "payments" }
 );
 
-module.exports = mongoose.model("Payment", paymentSchema);
+export default mongoose.model("Payment", paymentSchema);
