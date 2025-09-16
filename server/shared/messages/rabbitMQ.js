@@ -17,7 +17,7 @@ const sendQueue = async (queueName, message) => {
     channel = await conn.createChannel();
 
     await channel.assertQueue(queueName, { durable: true });
-    
+
     channel.sendToQueue(queueName, Buffer.from(message), { persistent: true });
   } catch (error) {
     console.error(error);

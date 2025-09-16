@@ -1,19 +1,29 @@
 // tuitionConsumer.js
 import { consumeQueue } from "../../../shared/messages/rabbitMQ.js";
-import ReplicaUserModel from "../models/ReplicaUserModel.js"
+import ReplicaUserModel from "../models/ReplicaUserModel.js";
+import TuitionModel from "../models/TuitionModel.js";
+
 const startConsumer = async () => {
-  await consumeQueue("user_created", async (msg) => {
-    try {
+  try {
+    await consumeQueue("user_created", async (msg) => {
       const user = JSON.parse(msg);
-      console.log("New User:", user);
+      console.log("Consume user:", user);
 
       await ReplicaUserModel.create(user);
-    } catch (err) {
-      console.log(err);
-    }
-  });
+    });
 
-  console.log("Tuition consumer is ready")
+    await consumeQueue("payment_success", async (msg) => {
+      const payment = JSON.parse(msg);
+      console.log("Consume payment:", payment);
+
+      await TuitionModel.updateOne(
+        { _id: payment.tuitionId },
+        { status: "PAID" }
+      );
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-export {startConsumer}
+export { startConsumer };
