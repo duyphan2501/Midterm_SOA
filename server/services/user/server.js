@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import connectDB from "./database/connectDB.js";
 import router from "./routes/user.route.js";
 import errorHandler from "../../shared/middlewares/errorHandler.js"
+import { startConsumer } from "./messages/userConsumer.js";
 dotenv.config({ quite: true });
 
 const app = express();
@@ -23,4 +24,5 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
   console.log(`Users service on ${PORT}`);
   await connectDB();
+  await startConsumer();
 });

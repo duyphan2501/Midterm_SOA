@@ -1,5 +1,7 @@
-// tuitionConsumer.js
-import { consumeQueue } from "../../../shared/messages/rabbitMQ.js";
+import {
+  consumeQueue,
+  subscribeMessage,
+} from "../../../shared/messages/rabbitMQ.js";
 import ReplicaUserModel from "../models/ReplicaUserModel.js";
 import TuitionModel from "../models/TuitionModel.js";
 
@@ -7,20 +9,22 @@ const startConsumer = async () => {
   try {
     await consumeQueue("user_created", async (msg) => {
       const user = JSON.parse(msg);
-      console.log("Consume user:", user);
-
       await ReplicaUserModel.create(user);
     });
 
-    await consumeQueue("payment_success", async (msg) => {
-      const payment = JSON.parse(msg);
-      console.log("Consume payment:", payment);
-
-      await TuitionModel.updateOne(
-        { _id: payment.tuitionId },
-        { status: "PAID" }
-      );
-    });
+    await subscribeMessage(
+      "payment_success",
+      "queue_deduct_tuition",
+      async (msg) => {
+        const payment = JSON.parse(msg);
+        const updated = await TuitionModel.findByIdAndUpdate(
+          payment.tuitionId,
+          { status: "PAID" }
+        );
+        if (updated) console.log("Deducted tutition");
+        else throw new Error("Failed to deducted tutition");
+      }
+    );
   } catch (error) {
     console.log(error);
   }

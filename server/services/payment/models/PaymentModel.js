@@ -12,6 +12,7 @@ const paymentSchema = new mongoose.Schema(
       enum: ["PENDING", "SUCCESS", "FAILED"],
       default: "PENDING",
     },
+    amount: { type: Number, required: true, min: 0 },
   },
   { timestamps: true, collection: "payments" }
 );

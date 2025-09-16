@@ -2,13 +2,16 @@ import CreateError from "http-errors";
 import PaymentModel from "../models/PaymentModel.js";
 import { sendOtpCode } from "../helpers/email.helper.js";
 import { generatePaymentId } from "../helpers/payment.helper.js";
-import { sendQueue } from "../../../shared/messages/rabbitMQ.js";
+import { publishMessage } from "../../../shared/messages/rabbitMQ.js";
 const createPayment = async (req, res, next) => {
   try {
     const { tuition, payer } = req.body;
 
     if (!tuition || !payer)
       throw CreateError.BadRequest("Tuition or payer is missing");
+
+    if (payer.balance < tuition.amount)
+        throw CreateError.BadRequest("Payer balance is not enough to pay")
 
     const paymentId = generatePaymentId(tuition);
 
@@ -19,10 +22,9 @@ const createPayment = async (req, res, next) => {
 
     const otpCode = Math.floor(Math.random() * 900000 + 100000);
 
-    await sendOtpCode(payer.email, payer.fullname, otpCode);
+    // await sendOtpCode(payer.email, payer.fullname, otpCode);
 
     const otpExpireAt = new Date(Date.now() + 1000 * 60 * 5);
-
 
     const payment = await PaymentModel.create({
       paymentId,
@@ -30,6 +32,7 @@ const createPayment = async (req, res, next) => {
       payerId: payer.username,
       otpCode,
       otpExpireAt,
+      amount: tuition.amount
     });
 
     return res.status(201).json({
@@ -73,10 +76,9 @@ const processPayment = async (req, res, next) => {
     foundPayment.otpCode = undefined;
     foundPayment.otpExpireAt = undefined;
     await foundPayment.save();
-    
-    await sendQueue("payment_success", JSON.stringify(payment));
-    console.log("Sent queue payment_success")
 
+    await publishMessage("payment_success", JSON.stringify(foundPayment))
+    
     return res.status(200).json({
       message: "Payment is successfully!",
       payment: foundPayment,
@@ -97,7 +99,7 @@ const sendOtp = async (req, res, next) => {
       throw CreateError.BadRequest("Payment object ID is required");
 
     const otpCode = Math.floor(Math.random() * 900000 + 100000);
-    await sendOtpCode(payer.email, payer.fullname, otpCode);
+    // await sendOtpCode(payer.email, payer.fullname, otpCode);
     const otpExpireAt = new Date(Date.now() + 1000 * 60 * 5);
 
     await PaymentModel.updateOne(
