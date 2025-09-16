@@ -3,8 +3,8 @@ import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import connectDB from "./database/connectDB.js";
-import errorHandler from "./middlewares/errorHandler.js";
 import router from "./routes/user.route.js";
+import errorHandler from "../../shared/middlewares/errorHandler.js"
 dotenv.config({ quite: true });
 
 const app = express();

@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const tuitionSchema = new mongoose.Schema({
-  mssv: {type: String, required: true},
+  studentId: {type:String, required: true},
   semester: {type: String, required: true},
   amount: {type: Number, required: true, min: 0},
   status: {
@@ -11,4 +11,4 @@ const tuitionSchema = new mongoose.Schema({
   },
 }, { timestamps: true, collection: "tuitions" })
 
-module.exports = mongoose.model('Tuition', tuitionSchema);
+export default mongoose.model('Tuition', tuitionSchema);

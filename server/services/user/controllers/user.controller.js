@@ -2,6 +2,7 @@ import CreateError from "http-errors";
 import { signToken } from "../helpers/jwt.helper.js";
 import { comparePassword, hashPassword } from "../helpers/password.helper.js";
 import UserModel from "../models/UserModel.js";
+import { sendQueue } from "../../../shared/messages/rabbitMQ.js";
 
 const login = async (req, res, next) => {
   try {
@@ -37,12 +38,12 @@ const createAccount = async (req, res, next) => {
     const { username, password, fullname, phone, email, balance } = req.body;
 
     if (!username || !password || !fullname || !phone || !email || !balance) 
-      throw new CreateError.BadRequest("Some field is missing")
+      throw CreateError.BadRequest("Some field is missing")
 
     const existingUser = await UserModel.findOne({username})
 
     if (existingUser)
-      throw new CreateError.Conflict("Username is already used")
+      throw CreateError.Conflict("Username is already used")
 
     const hashedPassword = await hashPassword(password)
 
@@ -54,6 +55,13 @@ const createAccount = async (req, res, next) => {
       email,
       balance
     })
+
+    await sendQueue("user_created", JSON.stringify({
+      studentId: newUser.username,
+      fullname: newUser.fullname,
+      email: newUser.email,
+      phone: newUser.phone
+    }));
 
     return res.status(201).json({
       message: "Create successfully",
@@ -74,12 +82,12 @@ const getUserInfo = async(req ,res, next) => {
       const {username} = req.params
 
       if (!username)
-        throw new CreateError.BadRequest("Username is required")
+        throw CreateError.BadRequest("Username is required")
 
       const user = await UserModel.findOne({username})
 
       if (!user)
-        throw new CreateError.NotFound("User does not exist")
+        throw CreateError.NotFound("User does not exist")
 
       return res.status(200).json({
         user: {

@@ -11,9 +11,9 @@ const connectDB = async () => {
 
     await mongoose.connect(mongoURI);
 
-    console.log("Tuition db connected successfully");
+    console.log("Tuitions db connected successfully");
   } catch (error) {
-    console.error("Tuition db failed to connect:", error.message);
+    console.error("Tuitions db failed to connect:", error.message);
   }
 };
 
