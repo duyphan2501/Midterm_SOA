@@ -8,12 +8,11 @@ const startConsumer = async () => {
       "queue_update_balance",
       async (msg) => {
         const payment = JSON.parse(msg);
-        const updated = await UserModel.updateOne(
-          { username: payment.payerId },
-          { $inc: { balance: -payment.amount } }
+        const affectedRows = await UserModel.decreaseBalance(
+          payment.amount, payment.payer_id
         );
 
-        if (updated.modifiedCount)
+        if (affectedRows)
           console.log("Updated balance")
         else
           throw new Error("Failed to update balance")

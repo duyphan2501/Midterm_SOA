@@ -1,15 +1,23 @@
-import mongoose from "mongoose";
+import { pool } from "../database/connectDB.js";
 
-const userSchema = new mongoose.Schema(
-  {
-    username: { type: String, required: true },
-    password: { type: String, required: true },
-    fullname: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
-    phone: { type: String, required: true },
-    balance: { type: Number, required: true, min: 0, default: 0 },
-  },
-  { timestamps: true, collection: "users" }
-);
+const findUserByUsername = async (username) => {
+  const query = "SELECT * FROM users WHERE username = ? LIMIT 1";
+  const [rows] = await pool.query(query, [username]);
+  return rows.length > 0 ? rows[0] : null;
+};
 
-export default mongoose.model("User", userSchema);
+const getBalance = async (userId) => {
+  const query = "SELECT balance FROM users WHERE id = ? LIMIT 1";
+  const [rows] = await pool.query(query, [userId]);
+  return rows.length > 0 ? rows[0].balance : null;
+};
+
+const decreaseBalance = async (decreaseAmount, userId) => {
+  const query = "UPDATE users SET balance = balance - ? WHERE id = ?";
+  const [result] = await pool.query(query, [decreaseAmount, userId]);
+  return result.affectedRows; 
+};
+
+const UserModel = { findUserByUsername, getBalance, decreaseBalance }
+
+export default UserModel;
