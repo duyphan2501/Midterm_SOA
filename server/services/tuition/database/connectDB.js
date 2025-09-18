@@ -1,20 +1,28 @@
-import mongoose from "mongoose"
-import dotenv from "dotenv"
-dotenv.config({quite: true})
+import mysql2 from "mysql2";
+import dotenv from "dotenv";
+dotenv.config();
 
-const connectDB = async () => {
+const pool = mysql2
+  .createPool({
+    host: process.env.MYSQL_DB_HOST,
+    user: process.env.MYSQL_DB_USER,
+    password: process.env.MYSQL_DB_PASS,
+    database: process.env.MYSQL_DB_NAME,
+    port: process.env.MYSQL_DB_PORT || 3306,
+    connectionLimit: 10,
+    queueLimit: 0,
+    waitForConnections: true,
+  })
+  .promise();
+
+const checkConnection = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI;
-    if (!mongoURI) {
-      throw new Error("MONGO_URI tuitiondb not found in environment variables");
-    } 
-
-    await mongoose.connect(mongoURI);
-
-    console.log("Tuitions db connected successfully");
+    const connection = await pool.getConnection();
+    console.log("Connect to tuitiondb successfully");
+    connection.release();
   } catch (error) {
-    console.error("Tuitions db failed to connect:", error.message);
+    console.error("Failed to connect tuitiondb:", error.message);
   }
 };
 
-export default connectDB
+export { pool, checkConnection };

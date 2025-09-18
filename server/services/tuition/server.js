@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import connectDB from "./database/connectDB.js";
+import {checkConnection} from "./database/connectDB.js";
 import errorHandler from "../../shared/middlewares/errorHandler.js";
 import router from "./routes/tuition.route.js";
 import { startConsumer } from "./messages/tutitionConsumer.js";
@@ -25,6 +25,6 @@ app.use(errorHandler);
 
 app.listen(PORT, async () => {
   console.log(`Tuitions service on ${PORT}`);
-  await connectDB();
+  await checkConnection();
   await startConsumer()
 });
