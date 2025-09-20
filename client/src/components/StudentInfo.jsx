@@ -40,18 +40,6 @@ const StudentInfo = ({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Chip
-            label="1"
-            sx={{
-              width: 40,
-              height: 40,
-              bgcolor: "warning.600",
-              color: "white",
-              fontWeight: "bold",
-              fontSize: "1.1rem",
-              mr: 2,
-            }}
-          />
           <Typography
             variant="h5"
             component="h3"
@@ -62,8 +50,8 @@ const StudentInfo = ({
           </Typography>
         </Box>
 
-        <Grid container spacing={2} alignItems="end" sx={{ mb: 2 }}>
-          <Grid size={{ xs: 12, sm: 3, md: 3.9 }}>
+        <Grid container spacing={2} alignItems="flex-end" sx={{ mb: 2 }}>
+          <Grid size={{ xs: 12, sm: 12, md: 3.95 }}>
             <Typography
               variant="body2"
               fontWeight="medium"
@@ -91,9 +79,8 @@ const StudentInfo = ({
               }}
             />
           </Grid>
-
           <Grid
-            size={{ xs: 12, sm: 4, md: 2 }}
+            size={{ xs: 12, sm: 2, md: 1.85 }}
             sx={{
               display: "flex",
               justifyContent: { xs: "flex-start", sm: "flex-end" },
@@ -104,13 +91,13 @@ const StudentInfo = ({
               onClick={() =>
                 onSearchStudent && onSearchStudent(paymentData.studentId)
               }
-              disabled={!paymentData.studentId}
               sx={{
-                minWidth: { xs: "100%", sm: 120, md: 140 },
-                width: { xs: "100%", sm: "auto" },
+                width: { xs: "100%", sm: 140 },
+                height: 45,
                 bgcolor: "warning.600",
                 "&:hover": { bgcolor: "warning.700" },
               }}
+              disabled={!paymentData.studentId}
             >
               Tìm kiếm
             </Button>
