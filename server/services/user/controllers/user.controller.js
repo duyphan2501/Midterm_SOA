@@ -30,4 +30,21 @@ const login = async (req, res, next) => {
   }
 };
 
-export { login };
+const decreaseBalance = async (req, res, next) => {
+  try {
+    const { userId, decreaseAmount } = req.body;
+    if (!userId || !decreaseAmount)
+      throw CreateError.BadRequest("UserId or decreaseAmount is missing");
+    const affectedRows = await UserModel.decreaseBalance(decreaseAmount, userId);
+    if (affectedRows === 0)
+      throw CreateError.BadRequest("Insufficient balance or user not found");
+    return res.status(200).json({
+      message: "Decrease balance successfully",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { login, decreaseBalance };

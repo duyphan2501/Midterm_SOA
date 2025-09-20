@@ -6,12 +6,18 @@ const findUnpaidTuition = async (studentId) => {
   return rows.length > 0 ? rows: null
 }
 
-const markPaidTuition = async (tuitionId) => {
+const updateStatus = async (tuitionId, status) => {
   const query = `UPDATE tuitions SET status = ? WHERE tuition_id = ?`;
-  const [result] = await pool.query(query, ["PAID", tuitionId]);
+  const [result] = await pool.query(query, [status, tuitionId]);
   return result.affectedRows; 
 }
 
-const TuitionModel = {findUnpaidTuition, markPaidTuition}
+const checkStatus = async (tuitionId, status) => {
+  const query = `SELECT 1 FROM tuitions WHERE tuition_id = ? AND status = ? LIMIT 1`;
+  const [rows] = await pool.query(query, [tuitionId, status]);
+  return rows.length > 0;
+}
+
+const TuitionModel = {findUnpaidTuition, updateStatus, checkStatus}
 
 export default TuitionModel

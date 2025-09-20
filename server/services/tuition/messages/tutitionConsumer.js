@@ -7,16 +7,27 @@ const startConsumer = async () => {
   try {
     await subscribeMessage(
       "payment_success",
-      "queue_deduct_tuition",
+      "tuition_payment_success",
       async (msg) => {
         const payment = JSON.parse(msg);
-        const affectedRows = await TuitionModel.markPaidTuition(payment.tuition_id);
-        if (affectedRows === 1) console.log("Deducted tutition");
-        else throw new Error("Failed to deducted tutition");
+        const affectedRows = await TuitionModel.updateStatus(payment.tuition_id, "PAID");
+        if (affectedRows === 1) console.log(`Tuition ${payment.tuition_id} marked PAID`);
+        else throw new Error("Cannot update tuition status");
+      }
+    );
+
+    await subscribeMessage(
+      "payment_failed",
+      "tuition_payment_failed",
+      async (msg) => {
+        const payment = JSON.parse(msg);
+        const affectedRows = await TuitionModel.updateStatus(payment.tuition_id, "UNPAID");
+        if (affectedRows === 1) console.log(`Tuition ${payment.tuition_id} marked UNPAID`);
+        else throw new Error("Cannot update tuition status");
       }
     );
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 

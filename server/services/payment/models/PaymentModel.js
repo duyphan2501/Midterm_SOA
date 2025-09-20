@@ -52,12 +52,19 @@ const updatePaymentOtp = async (paymentId, otpCode, otpExpireAt) => {
   return result.affectedRows;
 }
 
+const updateStatus = async (paymentId, status) => {
+  const query = `UPDATE payments SET status = ? WHERE payment_id = ?`;
+  const [result] = await pool.query(query, [status, paymentId]);
+  return result.affectedRows;
+};
+
 const PaymentModel = {
   checkPaidPayment,
   create,
   findPaymentById,
   updatePaymentSuccess,
-  updatePaymentOtp
+  updatePaymentOtp,
+  updateStatus
 };
 
 export default PaymentModel;

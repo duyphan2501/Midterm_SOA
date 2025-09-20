@@ -27,5 +27,5 @@ app.listen(PORT, async () => {
   console.log(`Users service on ${PORT}`);
   await checkConnection();
   // await resetMQ("payment_sucess", ["queue_update_balance", "queue_deduct_tuition"])
-  await startConsumer();
+  // await startConsumer();
 });
