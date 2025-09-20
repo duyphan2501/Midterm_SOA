@@ -9,13 +9,12 @@ const startConsumer = async () => {
       async (msg) => {
         const payment = JSON.parse(msg);
         const affectedRows = await UserModel.decreaseBalance(
-          payment.amount, payment.payer_id
+          payment.amount,
+          payment.payer_id
         );
 
-        if (affectedRows)
-          console.log("Updated balance")
-        else
-          throw new Error("Failed to update balance")
+        if (affectedRows) console.log("Updated balance");
+        else throw new Error("Failed to update balance");
       }
     );
   } catch (error) {

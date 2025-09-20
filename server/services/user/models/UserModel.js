@@ -13,7 +13,7 @@ const getBalance = async (userId) => {
 };
 
 const decreaseBalance = async (decreaseAmount, userId) => {
-  const query = "UPDATE users SET balance = balance - ? WHERE id = ?";
+  const query = "UPDATE users SET balance = balance - ? WHERE user_id = ?";
   const [result] = await pool.query(query, [decreaseAmount, userId]);
   return result.affectedRows; 
 };

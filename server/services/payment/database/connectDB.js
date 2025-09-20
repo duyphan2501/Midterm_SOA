@@ -1,20 +1,29 @@
-import mongoose from "mongoose"
-import dotenv from "dotenv"
-dotenv.config({quite: true})
+import mysql2 from "mysql2";
+import dotenv from "dotenv";
+dotenv.config();
 
-const connectDB = async () => {
+const pool = mysql2
+  .createPool({
+    host: process.env.MYSQL_DB_HOST,
+    user: process.env.MYSQL_DB_USER,
+    password: process.env.MYSQL_DB_PASS,
+    database: process.env.MYSQL_DB_NAME,
+    port: process.env.MYSQL_DB_PORT || 3306,
+    connectionLimit: 10,
+    queueLimit: 0,
+    waitForConnections: true,
+  })
+  .promise();
+
+const checkConnection = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI;
-    if (!mongoURI) {
-      throw new Error("MONGO_URI payment db not found in environment variables");
-    } 
-
-    await mongoose.connect(mongoURI);
-   
-    console.log("Payment db connected successfully");
+    const connection = await pool.getConnection();
+    const [rows] = await pool.query("SELECT DATABASE() AS db_name");
+    console.log("Connected to DB:", rows[0].db_name);
+    connection.release();
   } catch (error) {
-    console.error("Payment db failed to connect:", error.message);
+    console.error("Failed to connect paymentdb:", error.message);
   }
 };
 
-export default connectDB
+export { pool, checkConnection };

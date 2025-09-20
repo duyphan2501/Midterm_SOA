@@ -18,7 +18,8 @@ const pool = mysql2
 const checkConnection = async () => {
   try {
     const connection = await pool.getConnection();
-    console.log("Connect to tuitiondb successfully");
+    const [rows] = await pool.query("SELECT DATABASE() AS db_name");
+    console.log("Connected to DB:", rows[0].db_name);
     connection.release();
   } catch (error) {
     console.error("Failed to connect tuitiondb:", error.message);

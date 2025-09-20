@@ -1,8 +1,9 @@
 import CreateError from "http-errors";
 import PaymentModel from "../models/PaymentModel.js";
 import { sendOtpCode } from "../helpers/email.helper.js";
-import { generatePaymentId } from "../helpers/payment.helper.js";
+import { generatePaymentCode } from "../helpers/payment.helper.js";
 import { publishMessage } from "../../../shared/messages/rabbitMQ.js";
+
 const createPayment = async (req, res, next) => {
   try {
     const { tuition, payer } = req.body;
@@ -11,35 +12,35 @@ const createPayment = async (req, res, next) => {
       throw CreateError.BadRequest("Tuition or payer is missing");
 
     if (payer.balance < tuition.amount)
-        throw CreateError.BadRequest("Payer balance is not enough to pay")
+      throw CreateError.BadRequest("Payer balance is not enough to pay");
 
-    const paymentId = generatePaymentId(tuition);
+    const paymentCode = generatePaymentCode(tuition);
 
-    const paidPayment = await PaymentModel.findOne({paymentId, status: "SUCCESS"})
+    const paidPayment = await PaymentModel.checkPaidPayment(paymentCode);
 
-    if (paidPayment)
-        throw CreateError.Conflict("Payment has been processed")
+    if (paidPayment) throw CreateError.Conflict("Payment has been processed");
 
     const otpCode = Math.floor(Math.random() * 900000 + 100000);
 
-    // await sendOtpCode(payer.email, payer.fullname, otpCode);
+    // await sendOtpCode(payer.email, payer.fullname, otpCode, 1);
 
-    const otpExpireAt = new Date(Date.now() + 1000 * 60 * 5);
+    const otpExpireAt = new Date(Date.now() + 1000 * 60 * 1);
 
-    const payment = await PaymentModel.create({
-      paymentId,
-      tuitionId: tuition._id,
-      payerId: payer.username,
+    const newPaymentId = await PaymentModel.create(
+      paymentCode,
+      tuition.tuition_id,
+      payer.user_id,
       otpCode,
       otpExpireAt,
-      amount: tuition.amount
-    });
+      tuition.amount
+    );
+    const payment = await PaymentModel.findPaymentById(newPaymentId)
 
     return res.status(201).json({
       message: "Create payment successfully!",
       payment: {
-        ...payment._doc,
-        otpCode: undefined
+        ...payment,
+        otpCode: undefined,
       },
       success: true,
     });
@@ -50,71 +51,66 @@ const createPayment = async (req, res, next) => {
 
 const processPayment = async (req, res, next) => {
   try {
-    const { otpCode, payment } = req.body;
+    let { otpCode, payment } = req.body;
 
     if (!otpCode) throw CreateError.BadRequest("Please enter OTP code");
+    if (!payment) throw CreateError.BadRequest("Payment is missing");
 
-    if (!payment._id) throw CreateError.BadRequest("Payment is missing");
+    const affectedRows = await PaymentModel.updatePaymentSuccess(payment.payment_id, otpCode)
 
-    const foundPayment = await PaymentModel.findById(payment._id);
+    if (affectedRows === 1) {
+      // payment success
+      await publishMessage("payment_success", JSON.stringify(payment));
+      
+      return res.status(200).json({
+        message: "Payment is successfully!",
+        success: true,
+      });
+    }
 
-    // handle error
-    if (!foundPayment) throw CreateError.NotFound("Payment does not exist");
-    else if (foundPayment.status === "PAID")
-      throw CreateError.Conflict("Payment is paid");
-    else if (foundPayment.status === "FAILED")
+    // payment fail
+    payment = await PaymentModel.findPaymentById(payment.payment_id)
+    if (!payment) throw CreateError.NotFound("Payment does not exist");
+
+    if (payment.status === "SUCCESS")
+      throw CreateError.Conflict("Payment is already paid");
+    if (payment.status === "FAILED")
       throw CreateError.Conflict("Payment is cancelled");
-    else if (foundPayment.otpExpireAt < new Date())
-      throw CreateError.Forbidden(
-        "OTP code is expired! Click sent OTP again to continue"
-      );
-    else if (foundPayment.otpCode !== otpCode)
+    if (new Date(payment.otp_expire_at) < new Date())
+      throw CreateError.Forbidden("OTP code is expired! Please request again");
+    if (payment.otp_code !== otpCode)
       throw CreateError.Forbidden("OTP code is not correct");
 
-    // payment success
-    foundPayment.status = "SUCCESS";
-    foundPayment.otpCode = undefined;
-    foundPayment.otpExpireAt = undefined;
-    await foundPayment.save();
-
-    await publishMessage("payment_success", JSON.stringify(foundPayment))
-    
-    return res.status(200).json({
-      message: "Payment is successfully!",
-      payment: foundPayment,
-      success: true,
-    });
+    // Nếu tới đây mà vẫn không match thì có thể do race condition
+    throw CreateError.Conflict("Payment already processed by another request");
   } catch (error) {
     next(error);
   }
 };
 
+
 const sendOtp = async (req, res, next) => {
   try {
-    const { payer, paymentObId } = req.body;
+    const { payer, paymentId } = req.body;
 
     if (!payer) throw CreateError.BadRequest("Payer is required");
 
-    if (!paymentObId)
-      throw CreateError.BadRequest("Payment object ID is required");
+    if (!paymentId)
+      throw CreateError.BadRequest("Payment ID is required");
 
     const otpCode = Math.floor(Math.random() * 900000 + 100000);
-    // await sendOtpCode(payer.email, payer.fullname, otpCode);
-    const otpExpireAt = new Date(Date.now() + 1000 * 60 * 5);
+    // await sendOtpCode(payer.email, payer.fullname, otpCode, 1);
+    const otpExpireAt = new Date(Date.now() + 1000 * 60 * 1);
 
-    await PaymentModel.updateOne(
-      { _id: paymentObId },
-      {
-        otpCode,
-        otpExpireAt,
-      }
-    );
+    const affectedRows = await PaymentModel.updatePaymentOtp(paymentId, otpCode, otpExpireAt)
+    if (!affectedRows)
+      throw CreateError.InternalServerError("Failed to update otp")
 
     return res.status(200).json({
-        message: "OTP sent successfully!",
-        success: true,
-    })
-
+      message: "OTP sent successfully!",
+      otpCode,
+      success: true,
+    });
   } catch (error) {
     next(error);
   }

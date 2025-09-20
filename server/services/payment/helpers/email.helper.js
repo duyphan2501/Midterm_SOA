@@ -14,8 +14,8 @@ const sendEmail = async (email, subject, html) => {
   console.log("Message sent:", info.messageId);
 };
 
-const sendOtpCode = async(email, username, otpCode) => {
-  const {subject, html } = otpPaymentEmail(username, otpCode, 5)
+const sendOtpCode = async(email, username, otpCode, expMinutes) => {
+  const {subject, html } = otpPaymentEmail(username, otpCode, expMinutes)
   await sendEmail(email, subject, html)
 }
 

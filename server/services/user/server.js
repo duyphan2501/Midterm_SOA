@@ -6,6 +6,7 @@ import { checkConnection } from "./database/connectDB.js";
 import router from "./routes/user.route.js";
 import errorHandler from "../../shared/middlewares/errorHandler.js";
 import { startConsumer } from "./messages/userConsumer.js";
+import { resetMQ } from "../../shared/messages/rabbitMQ.js";
 
 dotenv.config({ quite: true });
 
@@ -25,5 +26,6 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
   console.log(`Users service on ${PORT}`);
   await checkConnection();
+  // await resetMQ("payment_sucess", ["queue_update_balance", "queue_deduct_tuition"])
   await startConsumer();
 });

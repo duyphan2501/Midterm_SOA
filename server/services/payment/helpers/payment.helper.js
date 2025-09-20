@@ -1,6 +1,6 @@
-const generatePaymentId = (tuition) => {
+const generatePaymentCode = (tuition) => {
     const semesterString = tuition.semester.split("_").join("")
-    return `${tuition.studentId}${semesterString}`
+    return `HP${tuition.student_id}${semesterString}`
 }
 
-export {generatePaymentId}
+export {generatePaymentCode}

@@ -6,9 +6,7 @@ const getUnPaidTuitionFee = async (req, res, next) => {
     const { studentId } = req.params;
 
     if (!studentId) throw CreateError.BadRequest("Student ID is required");
-
     const tuition = await TuitionModel.findUnpaidTuition(studentId);
-
     if (!tuition)
       throw CreateError.NotFound("There is no any unpaid tuition fee");
 
@@ -20,6 +18,5 @@ const getUnPaidTuitionFee = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export { getUnPaidTuitionFee };

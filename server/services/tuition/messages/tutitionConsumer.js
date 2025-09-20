@@ -10,8 +10,8 @@ const startConsumer = async () => {
       "queue_deduct_tuition",
       async (msg) => {
         const payment = JSON.parse(msg);
-        const affectedRows = await TuitionModel.markPaidTuition(payment.tuitionId);
-        if (affectedRows) console.log("Deducted tutition");
+        const affectedRows = await TuitionModel.markPaidTuition(payment.tuition_id);
+        if (affectedRows === 1) console.log("Deducted tutition");
         else throw new Error("Failed to deducted tutition");
       }
     );
