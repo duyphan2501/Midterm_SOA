@@ -2,23 +2,23 @@ import axios from "axios";
 
 const req1 = () =>
   axios.put("http://localhost:3000/api/payments/process", {
-    otpCode: "123456",
+    otpCode: "111111",
     payment: {
-      payment_id: 1,
-      tuition_id: 3,
+      payment_id: 3,
+      tuition_id: 2,
       payer_id: 1,
-      amount: 6000000,
+      amount: 4500000,
     },
   });
 
 const req2 = () =>
   axios.put("http://localhost:3000/api/payments/process", {
-    otpCode: "654321",
+    otpCode: "222222",
     payment: {
-      payment_id: 2,
-      tuition_id: 5,
-      payer_id: 1,
-      amount: 5500000,
+      payment_id: 4,
+      tuition_id: 2,
+      payer_id: 2,
+      amount: 4500000,
     },
   });
 

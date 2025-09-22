@@ -1,30 +1,21 @@
 import { pool } from "../database/connectDB.js";
 
-const checkPaidPayment = async (paymentCode) => {
-  const query = `SELECT 1 FROM payments WHERE payment_code = ? AND status = ? LIMIT 1`;
-  const [rows] = await pool.query(query, [paymentCode, "SUCCESS"]);
+const checkPaidTiontion = async (tuitionId) => {
+  const query = `SELECT 1 FROM payments WHERE tuition_id = ? AND status = ? LIMIT 1`;
+  const [rows] = await pool.query(query, [tuitionId, "SUCCESS"]);
   return rows.length > 0;
 };
 
-const create = async (
-  paymentCode,
-  tuitionId,
-  payerId,
-  otpCode,
-  otpExpireAt,
-  amount
-) => {
+const create = async (paymentCode, tuitionId, payerId, amount) => {
   const query = `
     INSERT INTO payments
-      (payment_code, tuition_id, payer_id, otp_code, otp_expire_at, amount)
-    VALUES (?, ?, ?, ?, ?, ?)
+      (payment_code, tuition_id, payer_id, amount)
+    VALUES (?, ?, ?, ?)
   `;
   const [rows] = await pool.query(query, [
     paymentCode,
     tuitionId,
     payerId,
-    otpCode,
-    otpExpireAt,
     amount,
   ]);
   return rows.insertId;
@@ -37,11 +28,36 @@ const findPaymentById = async (paymentId) => {
 };
 
 const updatePaymentSuccess = async (paymentId, otpCode) => {
-  const query = `UPDATE payments
-       SET status = 'SUCCESS', otp_code = NULL, otp_expire_at = NULL
-       WHERE payment_id = ? AND status = 'PENDING' AND otp_code = ? AND otp_expire_at > NOW()`;
-  const [result] = await pool.query(query, [paymentId, otpCode]);
-  return result.affectedRows;
+  try {
+    const [result] = await pool.query(
+      `
+      UPDATE payments p
+      JOIN otps o ON o.payment_id = p.payment_id
+      LEFT JOIN payments p2 
+        ON p2.tuition_id = p.tuition_id 
+       AND p2.status = 'SUCCESS'
+      SET 
+        p.status = 'SUCCESS',
+        o.is_used = 1
+      WHERE 
+        p.payment_id = ? 
+        AND p.status = 'PENDING'
+        AND o.otp_code = ?
+        AND o.is_used = 0
+        AND o.expire_at > NOW()
+        AND p2.payment_id IS NULL
+    `,
+      [paymentId, otpCode]
+    );
+
+    return result.affectedRows;
+  } catch (err) {
+    // Nếu deadlock, coi như affectedRows = -1 để service biết
+    if (err.code === "ER_LOCK_DEADLOCK") {
+      return -1;
+    }
+    throw err;
+  }
 };
 
 const updatePaymentOtp = async (paymentId, otpCode, otpExpireAt) => {
@@ -50,21 +66,32 @@ const updatePaymentOtp = async (paymentId, otpCode, otpExpireAt) => {
        WHERE payment_id = ?`;
   const [result] = await pool.query(query, [otpCode, otpExpireAt, paymentId]);
   return result.affectedRows;
-}
+};
 
-const updateStatus = async (paymentId, status) => {
-  const query = `UPDATE payments SET status = ? WHERE payment_id = ?`;
-  const [result] = await pool.query(query, [status, paymentId]);
+const updateStatus = async (paymentId, status, description = null) => {
+  let query = `UPDATE payments SET status = ?`;
+  const params = [status];
+
+  if (description) {
+    query += `, description = ?`; 
+    params.push(description);
+  }
+
+  query += ` WHERE payment_id = ?`;
+  params.push(paymentId);
+
+  const [result] = await pool.query(query, params);
   return result.affectedRows;
 };
 
+
 const PaymentModel = {
-  checkPaidPayment,
+  checkPaidTiontion,
   create,
   findPaymentById,
   updatePaymentSuccess,
   updatePaymentOtp,
-  updateStatus
+  updateStatus,
 };
 
 export default PaymentModel;

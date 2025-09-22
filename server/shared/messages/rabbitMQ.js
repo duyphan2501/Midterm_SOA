@@ -1,10 +1,8 @@
 import amqp from "amqplib";
-import dotenv from "dotenv";
-dotenv.config({ quiet: true });
 
 const connectMQ = async () => {
   try {
-    return await amqp.connect(process.env.AMQP_UTL_DOCKER);
+    return await amqp.connect();
   } catch (error) {
     console.log(error);
   }
@@ -56,7 +54,9 @@ const publishMessage = async (exchangeName, message) => {
 
     await channel.assertExchange(exchangeName, "fanout", { durable: true });
 
-    channel.publish(exchangeName, "", Buffer.from(message), { persistent: true });
+    channel.publish(exchangeName, "", Buffer.from(message), {
+      persistent: true,
+    });
     console.log(`Published to exchange "${exchangeName}":`, message);
   } catch (error) {
     console.error(error);
@@ -83,7 +83,9 @@ const subscribeMessage = async (exchangeName, queueName, callback) => {
       }
     });
 
-    console.log(`Subscribed to exchange "${exchangeName}" on queue "${queueName}"`);
+    console.log(
+      `Subscribed to exchange "${exchangeName}" on queue "${queueName}"`
+    );
   } catch (error) {
     console.error(error);
   }
@@ -107,7 +109,9 @@ const resetMQ = async (exchangeName, queues = []) => {
       await channel.assertQueue(queueName, { durable: true });
       // Bind queue với exchange
       await channel.bindQueue(queueName, exchangeName, "");
-      console.log(`[✔] Queue "${queueName}" bound to exchange "${exchangeName}"`);
+      console.log(
+        `[✔] Queue "${queueName}" bound to exchange "${exchangeName}"`
+      );
     }
 
     console.log(`[✔] Reset exchange "${exchangeName}" thành công`);
@@ -118,6 +122,5 @@ const resetMQ = async (exchangeName, queues = []) => {
     if (conn) await conn.close();
   }
 };
-
 
 export { sendQueue, consumeQueue, publishMessage, subscribeMessage, resetMQ };
