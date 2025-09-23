@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import { checkConnection } from "./database/connectDB.js";
@@ -11,7 +10,6 @@ import { resetMQ } from "../../shared/messages/rabbitMQ.js";
 dotenv.config({ quite: true });
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 

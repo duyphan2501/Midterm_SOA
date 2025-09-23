@@ -13,14 +13,5 @@ const signToken = (payload) => {
   });
 };
 
-const verifyToken = (token) => {
-    return new Promise((resolve, reject) => {
-        jwt.verify(token, jwtSecretKey, (err, payload) =>{
-            if (err) return reject(err)
-            return resolve(payload)
-        })
-    })
-}
 
-
-export {signToken, verifyToken}
+export {signToken}

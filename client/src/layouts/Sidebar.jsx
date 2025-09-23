@@ -27,18 +27,26 @@ import {
   Menu as MenuIcon,
   Close as CloseIcon,
 } from "@mui/icons-material";
+import useUserStore from "../stores/userStore";
 
 const Sidebar = ({
   user,
-  onLogout,
   currentPage,
   onPageChange,
   open,
   onToggle,
 }) => {
+  if (!user) return null;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const drawerWidth = 320;
+
+  const logout = useUserStore((state) => state.logout);
+
+  const onLogout = () => {
+    logout();
+    onPageChange("login");
+  }
 
   const SidebarContent = () => (
     <Box
@@ -100,7 +108,7 @@ const Sidebar = ({
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Person sx={{ fontSize: 16, color: "primary.main", mr: 1 }} />
             <Typography variant="body2" color="text.primary">
-              {user.fullName}
+              {user.fullname}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center" }}>

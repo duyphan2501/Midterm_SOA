@@ -6,6 +6,12 @@ const findUserByUsername = async (username) => {
   return rows.length > 0 ? rows[0] : null;
 };
 
+const findUserById = async (userId) => {
+  const query = "SELECT * FROM users WHERE user_id = ? LIMIT 1";
+  const [rows] = await pool.query(query, [userId]);
+  return rows.length > 0 ? rows[0] : null;
+}
+
 const getBalance = async (userId) => {
   const query = "SELECT balance FROM users WHERE id = ? LIMIT 1";
   const [rows] = await pool.query(query, [userId]);
@@ -18,6 +24,6 @@ const decreaseBalance = async (decreaseAmount, userId) => {
   return result.affectedRows; 
 };
 
-const UserModel = { findUserByUsername, getBalance, decreaseBalance }
+const UserModel = { findUserByUsername, getBalance, decreaseBalance, findUserById }
 
 export default UserModel;

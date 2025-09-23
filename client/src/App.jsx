@@ -1,60 +1,97 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Sidebar, { MobileHeader } from "./layouts/Sidebar";
 import PaymentHistory from "./pages/PaymentHistory.jsx";
 import PaymentPage from "./pages/PaymentForm.jsx";
 import Login from "./pages/Login.jsx";
+import { ToastContainer, Bounce } from "react-toastify";
+import useUserStore from "./stores/userStore.js";
+import { useEffect } from "react";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState("payment");
+  const [currentPage, setCurrentPage] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
+  const [userData, setUserData] = useState(null);
 
-  const userData = {
-    fullName: "Nguyễn Văn A",
-    phone: "0123456789",
-    email: "a@tdtu.edu.vn",
-    balance: 1112500000,
-  };
+  const user = useUserStore((state) => state.user);
+  const refreshUser = useUserStore((state) => state.refreshUser);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogout = () => {
-    alert("Đăng xuất thành công!");
-  };
+  useEffect(() => {
+    const initUser = async () => {
+      await refreshUser();
+      setLoading(false);
+    };
+    initUser();
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) setCurrentPage("login");
+      else {
+        setUserData(user);
+        if (!currentPage) setCurrentPage("payment");
+      }
+      console.log("User data:", user);
+      console.log("Current page:", currentPage);
+    }
+  }, [loading, user]);
+
 
   return (
-    <div
-      className={`flex h-screen bg-gray-100 transition-all duration-300 ${
-        otpDialogOpen ? "blur-sm pointer-events-none" : ""
-      }`}
-    >
-      <Sidebar
-        user={userData}
-        onLogout={handleLogout}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        open={sidebarOpen}
-        onToggle={() => setSidebarOpen(false)}
+    <>
+      <ToastContainer
+        position="top-center"
+        autoClose={2500}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        transition={Bounce}
       />
+      {currentPage === "login" ? (
+        <Login setCurrentPage={setCurrentPage} />
+      ) : (
+        <div
+          className={`flex h-screen bg-gray-100 transition-all duration-300 ${
+            otpDialogOpen ? "blur-sm pointer-events-none" : ""
+          }`}
+        >
+          <Sidebar
+            user={userData}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            open={sidebarOpen}
+            onToggle={() => setSidebarOpen(false)}
+          />
 
-      <div className="flex-1 overflow-auto">
-        <MobileHeader onToggle={() => setSidebarOpen(true)} />
+          <div className="flex-1 overflow-auto">
+            <MobileHeader onToggle={() => setSidebarOpen(true)} />
 
-        <div className="min-h-screen" style={{ backgroundColor: "#F3F2EC" }}>
-          <div className="max-w-6xl mx-auto px-6 py-8">
-            {currentPage === "payment" ? (
-              <PaymentPage
-                user={userData}
-                onOtpDialogChange={setOtpDialogOpen}
-              />
-            ) : (
-              <PaymentHistory />
-            )}
+            <div
+              className="min-h-screen"
+              style={{ backgroundColor: "#F3F2EC" }}
+            >
+              <div className="max-w-6xl mx-auto px-6 py-8">
+                {currentPage === "payment" ? (
+                  <PaymentPage
+                    user={userData}
+                    onOtpDialogChange={setOtpDialogOpen}
+                  />
+                ) : (
+                  <PaymentHistory />
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
-// function App() {
-// return <Login />;
-// }
+
 export default App;
