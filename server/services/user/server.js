@@ -3,10 +3,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import { checkConnection } from "./database/connectDB.js";
 import router from "./routes/user.route.js";
-import errorHandler from "../../shared/middlewares/errorHandler.js";
-import { startConsumer } from "./messages/userConsumer.js";
-import { resetMQ } from "../../shared/messages/rabbitMQ.js";
-
+import errorHandler from "./middlewares/errorHandler.js";
 dotenv.config({ quite: true });
 
 const app = express();
@@ -24,6 +21,4 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
   console.log(`Users service on ${PORT}`);
   await checkConnection();
-  // await resetMQ("payment_sucess", ["queue_update_balance", "queue_deduct_tuition"])
-  // await startConsumer();
 });

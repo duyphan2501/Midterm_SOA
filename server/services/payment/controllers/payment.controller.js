@@ -5,7 +5,7 @@ import {
   generateNewOtpCode,
   generatePaymentCode,
 } from "../helpers/payment.helper.js";
-import { publishMessage } from "../../../shared/messages/rabbitMQ.js";
+import { publishMessage } from "../messages/rabbitMQ.js";
 import dotenv from "dotenv";
 import axios from "axios";
 import OtpModel from "../models/OtpModel.js";

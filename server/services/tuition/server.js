@@ -2,9 +2,9 @@ import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import { checkConnection } from "./database/connectDB.js";
-import errorHandler from "../../shared/middlewares/errorHandler.js";
 import router from "./routes/tuition.route.js";
 import { startConsumer } from "./messages/tutitionConsumer.js";
+import errorHandler from "./middlewares/errorHandler.js";
 dotenv.config({ quite: true });
 
 const app = express();

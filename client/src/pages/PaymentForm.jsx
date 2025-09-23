@@ -118,7 +118,7 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
           <button
             disabled={!isFormValid() || isProcessing}
             onClick={handlePayment}
-            className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-bold text-lg rounded-xl hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-lg"
+            className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-bold text-lg rounded-xl hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-lg cursor-pointer"
           >
             <CheckCircle className="w-6 h-6 mr-2" />
             {isProcessing ? "Đang xử lý..." : "Xác nhận thanh toán"}
