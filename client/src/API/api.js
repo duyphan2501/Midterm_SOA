@@ -6,22 +6,31 @@ const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
 });
 
-// interceptor response
+let isLoggingOut = false;
+
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // xoá token
-      localStorage.removeItem("accessToken");
-      const { clearUser } = useUserStore.getState();
-      clearUser();
+    if (error.response) {
+      const { status, data } = error.response;
+      const message = data?.message || "";
+      console.log(message);
+      console.log(message.toLowerCase().includes("token"));
+      if (
+        (status === 401 || status === 403) &&
+        message.toLowerCase().includes("token") &&
+        !isLoggingOut
+      ) {
+        isLoggingOut = true;
 
-      // thông báo
-      toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        localStorage.removeItem("accessToken");
+        const { clearUser } = useUserStore.getState();
+        clearUser();
 
-      // reload hoặc redirect
-      window.location.reload();
+        toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+      }
     }
+
     return Promise.reject(error);
   }
 );

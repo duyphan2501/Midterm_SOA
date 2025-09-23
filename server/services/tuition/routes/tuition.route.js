@@ -1,6 +1,6 @@
 import express from "express"
 import { getUnPaidTuitionFee } from "../controllers/tuition.controller.js"
-import checkAuth from "../../../shared/middlewares/checkAuth.js"
+import checkAuth from "../middlewares/checkAuth.js"
 
 const router = express.Router()
 

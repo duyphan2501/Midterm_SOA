@@ -7,7 +7,7 @@ const findUserByUsername = async (username) => {
 };
 
 const findUserById = async (userId) => {
-  const query = "SELECT * FROM users WHERE user_id = ? LIMIT 1";
+  const query = "SELECT user_id, username, fullname, phone, email, balance FROM users WHERE user_id = ? LIMIT 1";
   const [rows] = await pool.query(query, [userId]);
   return rows.length > 0 ? rows[0] : null;
 }

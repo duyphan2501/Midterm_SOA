@@ -1,25 +1,29 @@
 import { X, Lock } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import OtpBox from "./OtpBox";
+import usePaymentStore from "../stores/paymentStore";
+import useUserStore from "../stores/userStore";
 
-const OTPScreen = ({ isOpen, onClose, onVerify, isProcessing = false }) => {
+const OTPScreen = ({ isOpen, onClose, clearPaymentData }) => {
   const [otpCode, setOtpCode] = useState("");
-  const [otpError, setOtpError] = useState("");
-
-  const handleSubmit = async () => {
-    if (!otpCode.trim()) {
-      setOtpError("Vui lòng nhập mã OTP");
-      return;
-    }
-
-    setOtpError("");
-    await onVerify(otpCode);
-  };
-
+  const isProcessing = usePaymentStore((state) => state.isProcessing);
+  const processPayment = usePaymentStore((state) => state.processPayment);
+  const payment = usePaymentStore((state) => state.payment)
+  const setUser = useUserStore((state) => state.setUser)
   const handleClose = () => {
     setOtpCode("");
-    setOtpError("");
     onClose();
+  };
+
+  const handleSubmit = async () => {
+    console.log(payment)
+    const user = await processPayment(otpCode, payment);
+    if (user) {
+      handleClose();
+      clearPaymentData();
+      setUser(user)
+    }
   };
 
   if (!isOpen) return null;
@@ -40,42 +44,32 @@ const OTPScreen = ({ isOpen, onClose, onVerify, isProcessing = false }) => {
           </button>
         </div>
 
-        <p className="text-gray-600 mb-4">
+        <p className="text-gray-600 mb-4 text-sm text-center">
           Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư và
           nhập mã để hoàn tất giao dịch.
         </p>
 
         <div className="mb-4">
-          <input
-            type="text"
-            value={otpCode}
-            onChange={(e) => setOtpCode(e.target.value)}
-            placeholder="Nhập mã OTP 6 số"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-2xl tracking-widest"
-            maxLength="6"
-            autoFocus
-          />
-          {otpError && <p className="text-red-500 text-sm mt-2">{otpError}</p>}
+          <OtpBox length={6} onChangeOtp={setOtpCode} onSubmit={handleSubmit} />
         </div>
 
         <div className="flex space-x-3">
           <button
             onClick={handleClose}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="cursor-pointer flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Hủy
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isProcessing}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            className="cursor-pointer flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
           >
             {isProcessing ? "Đang xác thực..." : "Xác nhận"}
           </button>
         </div>
 
         <p className="text-xs text-gray-500 text-center mt-3">
-          Mã OTP có hiệu lực trong 5 phút
+          Mã OTP có hiệu lực trong 1 phút
         </p>
       </div>
     </div>,

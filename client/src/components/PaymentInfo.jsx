@@ -52,7 +52,7 @@ const PaymentInfo = ({ user, paymentData, studentInfo }) => {
               fullWidth
               value={`${
                 studentInfo.tuitionFee !== 0
-                  ? user.balance.toLocaleString("vi-VN")
+                  ? user.balance.toLocaleString() + " VNĐ"
                   : ""
               }`}
               disabled

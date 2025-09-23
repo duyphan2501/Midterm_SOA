@@ -9,6 +9,7 @@ const useTuitionStore = create((set) => ({
   message: null,
   isLoading: false,
   success: false,
+  tuition: null,
   fetchTuition: async (studentId) => {
     set({ isLoading: true, message: null, success: false });
     try {
@@ -18,7 +19,7 @@ const useTuitionStore = create((set) => ({
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
-      set({ message: res.data.message, success: true });
+      set({ message: res.data.message, success: true, tuition: res.data.tuition[0] });
       return res.data.tuition[0];
     } catch (error) {
       console.error("Fetch tuition error:", error);

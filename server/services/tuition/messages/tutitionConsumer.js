@@ -1,6 +1,6 @@
 import {
   subscribeMessage,
-} from "../../../shared/messages/rabbitMQ.js";
+} from "../messages/rabbitMQ.js";
 import TuitionModel from "../models/TuitionModel.js";
 
 const startConsumer = async () => {

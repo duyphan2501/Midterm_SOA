@@ -12,7 +12,7 @@ const LoginPage = ({ setCurrentPage }) => {
     if (isLogin) return;
     await login(loginData.username.trim(), loginData.password);
     if (useUserStore.getState().user)
-      setCurrentPage("payment");
+      window.location.href = "/";
   };
 
   return (

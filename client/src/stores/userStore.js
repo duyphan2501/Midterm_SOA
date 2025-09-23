@@ -9,8 +9,8 @@ const API_URL = import.meta.env.VITE_GATEWAY_API_URL || "http://localhost:3000";
 const useUserStore = create((set) => ({
   user: null,
   isLogin: false,
-  accessToken: null,
-  clearUser: () => set({ user: null, accessToken: null }),
+  setUser: (newUser) => set({ user: newUser}),
+  clearUser: () => set({ user: null}),
   login: async (username, password) => {
     set({ isLogin: true });
     try {
@@ -27,7 +27,7 @@ const useUserStore = create((set) => ({
     }
   },
   logout: () => {
-    set({ user: null, accessToken: null });
+    set({ user: null });
     localStorage.removeItem("accessToken");
     toast.info("Logged out");
   },

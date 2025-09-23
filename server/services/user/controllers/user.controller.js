@@ -37,14 +37,19 @@ const decreaseBalance = async (req, res, next) => {
     const { userId, decreaseAmount } = req.body;
     if (!userId || !decreaseAmount)
       throw CreateError.BadRequest("UserId or decreaseAmount is missing");
+    
     const affectedRows = await UserModel.decreaseBalance(
       decreaseAmount,
       userId
     );
     if (affectedRows === 0)
       throw CreateError.BadRequest("Số dư không đủ để thanh toán");
+
+    const user = await UserModel.findUserById(userId)
+
     return res.status(200).json({
       message: "Trừ số dư thành công",
+      user,
       success: true,
     });
   } catch (error) {

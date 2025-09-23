@@ -7,6 +7,8 @@ import PaymentStatus from "../components/PaymentStatus";
 import OTPScreen from "../components/OTPScreen";
 import { Paper } from "@mui/material";
 import useTuitionStore from "../stores/tuitionStore";
+import usePaymentStore from "../stores/paymentStore";
+import { toast } from "react-toastify";
 
 const PaymentPage = ({ user, onOtpDialogChange }) => {
   const [paymentData, setPaymentData] = useState({
@@ -20,9 +22,10 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
   });
 
   const [showOtpDialog, setShowOtpDialog] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchTuition = useTuitionStore((state) => state.fetchTuition);
+  const createPayment = usePaymentStore((state) => state.createPayment);
+  const isProcessing = usePaymentStore((state) => state.isProcessing);
 
   const updateOtpDialog = (isOpen) => {
     setShowOtpDialog(isOpen);
@@ -44,7 +47,8 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
     return (
       paymentData.studentId &&
       paymentData.acceptTerms &&
-      studentInfo && studentInfo.tuitionFee !== 0 &&
+      studentInfo &&
+      studentInfo.tuitionFee !== 0 &&
       studentInfo.tuitionFee <= user.balance
     );
   };
@@ -53,13 +57,19 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
     setStudentInfo({ fullname: "", tuitionFee: 0, semester: "" });
   }, [paymentData.studentId]);
 
-  const sendOtp = (studentId, amount) => {};
-
-  const verifyOtpAndPay = (studentId, amount, otp) => {};
-
-  const handlePayment = async () => {};
-
-  const handleOtpVerify = async (otp) => {};
+  const handlePayment = async () => {
+    const tuition = useTuitionStore.getState().tuition;
+    if (!tuition) {
+      toast.error("Dữ liệu học phí không tồn tại. Vui lòng kiểm tra lại.");
+      return;
+    }
+    console.log(user)
+    await createPayment(tuition, user);
+    const payment = usePaymentStore.getState().payment;
+    console.log(payment);
+    onOtpDialogChange(true);
+    setShowOtpDialog(true);
+  };
 
   const closeOtpDialog = () => {
     updateOtpDialog(false);
@@ -99,19 +109,25 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
               />
             </div>
           </div>
-          {studentInfo.fullname && <PaymentStatus
-            open={studentInfo.fullname}
-            status={
-              studentInfo.tuitionFee !== 0 && studentInfo.tuitionFee <= user.balance ? "success" : "error"
-            }
-            message={
-              studentInfo.tuitionFee !== 0 && studentInfo.tuitionFee <= user.balance
-                ? "Có thể thanh toán: Số dư đủ để thực hiện giao dịch"
-                : `Không thể thanh toán: Số dư không đủ (thiếu ${(
-                    studentInfo.tuitionFee - user.balance
-                  ).toLocaleString("vi-VN")} VNĐ)`
-            }
-          />}
+          {studentInfo.fullname && (
+            <PaymentStatus
+              open={studentInfo.fullname}
+              status={
+                studentInfo.tuitionFee !== 0 &&
+                studentInfo.tuitionFee <= user.balance
+                  ? "success"
+                  : "error"
+              }
+              message={
+                studentInfo.tuitionFee !== 0 &&
+                studentInfo.tuitionFee <= user.balance
+                  ? "Có thể thanh toán: Số dư đủ để thực hiện giao dịch"
+                  : `Không thể thanh toán: Số dư không đủ (thiếu ${(
+                      studentInfo.tuitionFee - user.balance
+                    ).toLocaleString("vi-VN")} VNĐ)`
+              }
+            />
+          )}
         </Paper>
 
         <div className="text-center">
@@ -129,8 +145,13 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
       <OTPScreen
         isOpen={showOtpDialog}
         onClose={closeOtpDialog}
-        onVerify={handleOtpVerify}
         isProcessing={isProcessing}
+        clearPaymentData={() =>
+          setPaymentData({
+            studentId: "",
+            acceptTerms: false,
+          })
+        }
       />
     </>
   );
