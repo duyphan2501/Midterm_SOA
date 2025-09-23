@@ -1,17 +1,14 @@
-import React from "react";
 import { Alert, Typography, Collapse } from "@mui/material";
 import { CheckCircle, Error } from "@mui/icons-material";
 
-const PaymentStatus = ({ paymentData, studentInfo, user }) => {
-  if (!paymentData.studentId) return null;
-
-  const isEnough = studentInfo.tuitionFee <= user.balance;
+const PaymentStatus = ({ open, status, message }) => {
+  const isSuccess = status === "success";
 
   return (
-    <Collapse in={!!paymentData.studentId} timeout={500}>
+    <Collapse in={open} timeout={500}>
       <Alert
-        severity={isEnough ? "success" : "error"}
-        icon={isEnough ? <CheckCircle /> : <Error />}
+        severity={isSuccess ? "success" : "error"}
+        icon={isSuccess ? <CheckCircle /> : <Error />}
         sx={{
           borderRadius: 2,
           "& .MuiAlert-message": {
@@ -25,15 +22,7 @@ const PaymentStatus = ({ paymentData, studentInfo, user }) => {
         }}
       >
         <Typography variant="body1" fontWeight="600">
-          {isEnough ? (
-            "Có thể thanh toán: Số dư đủ để thực hiện giao dịch"
-          ) : (
-            <>
-              Không thể thanh toán: Số dư không đủ (thiếu{" "}
-              {(studentInfo.tuitionFee - user.balance).toLocaleString("vi-VN")}{" "}
-              VNĐ)
-            </>
-          )}
+          {message}
         </Typography>
       </Alert>
     </Collapse>

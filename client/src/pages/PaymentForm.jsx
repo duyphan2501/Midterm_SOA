@@ -1,20 +1,28 @@
 import { GraduationCap, CheckCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StudentInfoForm from "../components/StudentInfo";
 import PaymentInfo from "../components/PaymentInfo";
 import TermsAgreement from "../components/TermAgreement";
 import PaymentStatus from "../components/PaymentStatus";
 import OTPScreen from "../components/OTPScreen";
+import { Paper } from "@mui/material";
+import useTuitionStore from "../stores/tuitionStore";
 
 const PaymentPage = ({ user, onOtpDialogChange }) => {
   const [paymentData, setPaymentData] = useState({
     studentId: "",
     acceptTerms: false,
   });
+  const [studentInfo, setStudentInfo] = useState({
+    fullname: "",
+    tuitionFee: 0,
+    semester: "",
+  });
 
   const [showOtpDialog, setShowOtpDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const fetchTuition = useTuitionStore((state) => state.fetchTuition);
 
   const updateOtpDialog = (isOpen) => {
     setShowOtpDialog(isOpen);
@@ -23,50 +31,35 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
     }
   };
 
-  const mockStudentData = {
-    523: {
-      name: "Trần Thị Bình",
-      tuitionFee: 12500000,
-    },
-  };
-
-  const [studentInfo, setStudentInfo] = useState({
-    name: "",
-    tuitionFee: 0,
-  });
-
-  const handleSearchStudent = (studentId) => {
-    
+  const handleSearchStudent = async (studentId) => {
+    const tuition = await fetchTuition(studentId);
+    setStudentInfo({
+      fullname: tuition ? tuition.student_name : "",
+      tuitionFee: tuition ? tuition.amount : 0,
+      semester: tuition ? tuition.semester : "",
+    });
   };
 
   const isFormValid = () => {
     return (
       paymentData.studentId &&
       paymentData.acceptTerms &&
-      studentInfo &&
+      studentInfo && studentInfo.tuitionFee !== 0 &&
       studentInfo.tuitionFee <= user.balance
     );
   };
 
-  // Mock constants and functions
-  const DEMO_OTP = "123456";
-  const DEMO_EMAIL = "user****@gmail.com";
+  useEffect(() => {
+    setStudentInfo({ fullname: "", tuitionFee: 0, semester: "" });
+  }, [paymentData.studentId]);
 
-  const sendOtp = (studentId, amount) => {
-    
-  };
+  const sendOtp = (studentId, amount) => {};
 
-  const verifyOtpAndPay = (studentId, amount, otp) => {
-    
-  };
+  const verifyOtpAndPay = (studentId, amount, otp) => {};
 
-  const handlePayment = async () => {
-    
-  };
+  const handlePayment = async () => {};
 
-  const handleOtpVerify = async (otp) => {
-    
-  };
+  const handleOtpVerify = async (otp) => {};
 
   const closeOtpDialog = () => {
     updateOtpDialog(false);
@@ -89,26 +82,39 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
           onSearchStudent={handleSearchStudent}
         />
 
-        <>
-          <PaymentInfo
-            user={user}
-            paymentData={paymentData}
-            studentInfo={studentInfo}
-          />
+        <Paper elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2 }}>
+          <div className="lg:flex gap-7 mb-4">
+            <div className="flex-1">
+              <PaymentInfo
+                user={user}
+                paymentData={paymentData}
+                studentInfo={studentInfo}
+              />
+            </div>
 
-          <TermsAgreement
-            paymentData={paymentData}
-            setPaymentData={setPaymentData}
-          />
+            <div className="flex-1 mt-5 lg:mt-0">
+              <TermsAgreement
+                paymentData={paymentData}
+                setPaymentData={setPaymentData}
+              />
+            </div>
+          </div>
+          {studentInfo.fullname && <PaymentStatus
+            open={studentInfo.fullname}
+            status={
+              studentInfo.tuitionFee !== 0 && studentInfo.tuitionFee <= user.balance ? "success" : "error"
+            }
+            message={
+              studentInfo.tuitionFee !== 0 && studentInfo.tuitionFee <= user.balance
+                ? "Có thể thanh toán: Số dư đủ để thực hiện giao dịch"
+                : `Không thể thanh toán: Số dư không đủ (thiếu ${(
+                    studentInfo.tuitionFee - user.balance
+                  ).toLocaleString("vi-VN")} VNĐ)`
+            }
+          />}
+        </Paper>
 
-          <PaymentStatus
-            paymentData={paymentData}
-            studentInfo={studentInfo}
-            user={user}
-          />
-        </>
-
-        <div className="text-center pt-6">
+        <div className="text-center">
           <button
             disabled={!isFormValid() || isProcessing}
             onClick={handlePayment}

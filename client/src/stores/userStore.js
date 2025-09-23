@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { toast } from "react-toastify";
 import axios from "axios";
+import API from "../API/api.js";
 
 axios.defaults.withCredentials = true;
 const API_URL = import.meta.env.VITE_GATEWAY_API_URL || "http://localhost:3000";
@@ -9,6 +10,7 @@ const useUserStore = create((set) => ({
   user: null,
   isLogin: false,
   accessToken: null,
+  clearUser: () => set({ user: null, accessToken: null }),
   login: async (username, password) => {
     set({ isLogin: true });
     try {
@@ -33,7 +35,7 @@ const useUserStore = create((set) => ({
     try {
       const url = `${API_URL}/api/users/refresh`;
       console.log(localStorage.getItem("accessToken"));
-      const res = await axios.get(url, {
+      const res = await API.get(url, {
         headers: {  
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },

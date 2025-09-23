@@ -1,4 +1,4 @@
-import React from "react";
+import React, { use } from "react";
 import {
   Box,
   Typography,
@@ -15,6 +15,8 @@ import {
   FormControl,
 } from "@mui/material";
 import { School, Person, CreditCard, Category } from "@mui/icons-material";
+import PaymentStatus from "./PaymentStatus";
+import useTuitionStore from "../stores/tuitionStore";
 
 const StudentInfo = ({
   paymentData,
@@ -22,15 +24,14 @@ const StudentInfo = ({
   studentInfo,
   onSearchStudent,
 }) => {
+  const message = useTuitionStore((state) => state.message);
+  const success = useTuitionStore((state) => state.success);
   return (
     <Slide direction="right" in timeout={400}>
       <Paper
         elevation={3}
         sx={{
           p: { xs: 3, md: 4 },
-          bgcolor: "#FFEFD5",
-          border: 2,
-          borderColor: "#FF6600",
           borderRadius: 2,
           transition: "all 0.3s ease-in-out",
           "&:hover": {
@@ -40,6 +41,18 @@ const StudentInfo = ({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <Chip
+            label="1"
+            sx={{
+              width: 40,
+              height: 40,
+              bgcolor: `${studentInfo.tuitionFee !== 0 ? "#1976d3" : "success.600"}`,
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "1.1rem",
+              mr: 2,
+            }}
+          />
           <Typography
             variant="h5"
             component="h3"
@@ -50,8 +63,8 @@ const StudentInfo = ({
           </Typography>
         </Box>
 
-        <Grid container spacing={2} alignItems="flex-end" sx={{ mb: 2 }}>
-          <Grid size={{ xs: 12, sm: 12, md: 3.95 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+          <Grid size={{ xs: 12, md: 4 }}>
             <Typography
               variant="body2"
               fontWeight="medium"
@@ -60,51 +73,37 @@ const StudentInfo = ({
             >
               Mã số sinh viên
             </Typography>
-            <TextField
-              fullWidth
-              value={paymentData.studentId}
-              onChange={(e) =>
-                setPaymentData((prev) => ({
-                  ...prev,
-                  studentId: e.target.value,
-                }))
-              }
-              placeholder="VD: 52000001"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <School sx={{ color: "action.active" }} />
-                  </InputAdornment>
-                ),
-              }}
-            />
+            <div className="flex items-center">
+              <TextField
+                value={paymentData.studentId}
+                onChange={(e) =>
+                  setPaymentData((prev) => ({
+                    ...prev,
+                    studentId: e.target.value,
+                  }))
+                }
+                className=" [&_.MuiOutlinedInput-root]:!rounded-r-none flex-1"
+                placeholder="VD: 52000001"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <School sx={{ color: "action.active" }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                className="!h-full !py-[15.5px] !rounded-l-none !bg-[#1976d3] !text-white !border-none hover:!bg-[#1565c0] !px-4 disabled:!bg-gray-300 disabled:!cursor-not-allowed transition-colors"
+                onClick={() =>
+                  onSearchStudent &&
+                  onSearchStudent(paymentData.studentId.trim())
+                }
+                disabled={!paymentData.studentId}
+              >
+                Tìm kiếm
+              </Button>
+            </div>
           </Grid>
-          <Grid
-            size={{ xs: 12, sm: 2, md: 1.85 }}
-            sx={{
-              display: "flex",
-              justifyContent: { xs: "flex-start", sm: "flex-end" },
-            }}
-          >
-            <Button
-              variant="contained"
-              onClick={() =>
-                onSearchStudent && onSearchStudent(paymentData.studentId)
-              }
-              sx={{
-                width: { xs: "100%", sm: 140 },
-                height: 45,
-                bgcolor: "warning.600",
-                "&:hover": { bgcolor: "warning.700" },
-              }}
-              disabled={!paymentData.studentId}
-            >
-              Tìm kiếm
-            </Button>
-          </Grid>
-        </Grid>
-
-        <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 4 }}>
             <Fade in timeout={800}>
               <Box>
@@ -112,13 +111,13 @@ const StudentInfo = ({
                   variant="body2"
                   fontWeight="medium"
                   color="text.primary"
-                  sx={{ mb: 1 }}
+                  sx={{ mb: 1, userSelect: "none" }}
                 >
                   Họ tên sinh viên
                 </Typography>
                 <TextField
                   fullWidth
-                  value={studentInfo ? studentInfo.name : ""}
+                  value={studentInfo ? studentInfo.fullname : ""}
                   disabled
                   InputProps={{
                     startAdornment: (
@@ -153,8 +152,8 @@ const StudentInfo = ({
                 <TextField
                   fullWidth
                   value={
-                    studentInfo
-                      ? `${studentInfo.tuitionFee.toLocaleString("vi-VN")} VNĐ`
+                    studentInfo && studentInfo.tuitionFee !== 0
+                      ? `${studentInfo.tuitionFee?.toLocaleString()} VNĐ`
                       : ""
                   }
                   disabled
@@ -186,47 +185,38 @@ const StudentInfo = ({
                   color="text.primary"
                   sx={{ mb: 1 }}
                 >
-                  Chọn học kì
+                  Học kỳ
                 </Typography>
-                <FormControl fullWidth>
-                  <Select
-                    value={paymentData.feeType || ""}
-                    onChange={(e) =>
-                      setPaymentData((prev) => ({
-                        ...prev,
-                        feeType: e.target.value,
-                      }))
-                    }
-                    displayEmpty
-                    startAdornment={
+                <TextField
+                  fullWidth
+                  value={studentInfo ? studentInfo.semester : ""}
+                  disabled
+                  InputProps={{
+                    startAdornment: (
                       <InputAdornment position="start">
                         <Category sx={{ color: "action.active" }} />
                       </InputAdornment>
-                    }
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 1.5,
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          borderColor: "warning.500",
-                        },
-                        "&.Mui-focused": {
-                          borderColor: "warning.600",
-                        },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>Chọn học kì</em>
-                    </MenuItem>
-                    <MenuItem value="hk1">Học kì I</MenuItem>
-                    <MenuItem value="hk2">Học kì II</MenuItem>
-                  </Select>
-                </FormControl>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiInputBase-root": {
+                      bgcolor: "grey.100",
+                      borderRadius: 1.5,
+                      transition: "all 0.3s ease",
+                    },
+                  }}
+                />
               </Box>
             </Fade>
           </Grid>
-        </Grid>
+        </div>
+        {message && <div className="mt-5">
+          <PaymentStatus
+            open={message !== null}
+            status={success}
+            message={message}
+          />
+        </div>}
       </Paper>
     </Slide>
   );

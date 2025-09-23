@@ -11,6 +11,7 @@ import {
   ListItemText,
   Fade,
   useTheme,
+  Chip,
 } from "@mui/material";
 import { Circle } from "@mui/icons-material";
 
@@ -26,31 +27,29 @@ const TermsAgreement = ({ paymentData, setPaymentData }) => {
 
   return (
     <Fade in timeout={800}>
-      <Paper
-        elevation={2}
-        sx={{
-          p: { xs: 3, md: 4 },
-          bgcolor: "grey.50",
-          border: "1px solid",
-          borderColor: "grey.300",
-          borderRadius: 2,
-          transition: "all 0.3s ease-in-out",
-          "&:hover": {
-            elevation: 4,
-            transform: "translateY(-2px)",
-          },
-        }}
-      >
-        <Typography
-          variant="h6"
-          component="h4"
-          fontWeight="bold"
-          color="text.primary"
-          gutterBottom
-          sx={{ mb: 3 }}
-        >
-          Điều khoản và thỏa thuận
-        </Typography>
+      <div className="">
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+          <Chip
+            label="3"
+            sx={{
+              width: 40,
+              height: 40,
+              bgcolor: `${paymentData.acceptTerms ? "#1976d3" : "success.600"}`,
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "1.1rem",
+              mr: 2,
+            }}
+          />
+          <Typography
+            variant="h5"
+            component="h3"
+            fontWeight="bold"
+            color="text.primary"
+          >
+            Điều khoản và thỏa thuận
+          </Typography>
+        </Box>
 
         <List sx={{ mb: 3, p: 0 }}>
           {terms.map((term, index) => (
@@ -105,7 +104,7 @@ const TermsAgreement = ({ paymentData, setPaymentData }) => {
           }
           sx={{ m: 0 }}
         />
-      </Paper>
+      </div>
     </Fade>
   );
 };

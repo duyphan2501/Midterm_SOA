@@ -6,6 +6,7 @@ import Login from "./pages/Login.jsx";
 import { ToastContainer, Bounce } from "react-toastify";
 import useUserStore from "./stores/userStore.js";
 import { useEffect } from "react";
+import Loading from "./components/Loading.jsx";
 
 function App() {
   const [currentPage, setCurrentPage] = useState(null);
@@ -26,17 +27,16 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) setCurrentPage("login");
-      else {
-        setUserData(user);
-        if (!currentPage) setCurrentPage("payment");
-      }
-      console.log("User data:", user);
-      console.log("Current page:", currentPage);
-    }
-  }, [loading, user]);
+    if (loading) return;
 
+    if (!user) {
+      setCurrentPage("login");
+      setUserData(null);
+    } else {
+      if (userData !== user) setUserData(user); 
+      setCurrentPage((prev) => prev || "payment"); 
+    } 
+  }, [loading, user]);
 
   return (
     <>
@@ -82,9 +82,9 @@ function App() {
                     user={userData}
                     onOtpDialogChange={setOtpDialogOpen}
                   />
-                ) : (
+                ) : currentPage === "history" ?(
                   <PaymentHistory />
-                )}
+                ) : (<Loading />)}
               </div>
             </div>
           </div>
