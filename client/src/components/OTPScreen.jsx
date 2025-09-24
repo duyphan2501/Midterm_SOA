@@ -62,6 +62,7 @@ const OTPScreen = ({ isOpen, onClose, clearPaymentData }) => {
           </button>
           <button
             onClick={handleSubmit}
+            disabled={isProcessing}
             className="cursor-pointer flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
           >
             {isProcessing ? "Đang xác thực..." : "Xác nhận"}

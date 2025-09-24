@@ -9,6 +9,10 @@ const checkAuth = (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
   if (!token) return res.status(401).json({ message: "Invalid token format" });
+
+  if (token === process.env.SERVICE_TOKEN) 
+    return next()
+
   console.log("Token:", token); // Debugging line
   jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) return res.status(403).json({ message: "Token is not valid" });

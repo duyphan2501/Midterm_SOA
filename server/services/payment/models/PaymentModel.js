@@ -60,14 +60,6 @@ const updatePaymentSuccess = async (paymentId, otpCode) => {
   }
 };
 
-const updatePaymentOtp = async (paymentId, otpCode, otpExpireAt) => {
-  const query = `UPDATE payments
-       SET otp_code = ?, otp_expire_at = ?
-       WHERE payment_id = ?`;
-  const [result] = await pool.query(query, [otpCode, otpExpireAt, paymentId]);
-  return result.affectedRows;
-};
-
 const updateStatus = async (paymentId, status, description = null) => {
   let query = `UPDATE payments SET status = ?`;
   const params = [status];
@@ -84,14 +76,19 @@ const updateStatus = async (paymentId, status, description = null) => {
   return result.affectedRows;
 };
 
+const getDuplicatePayment = async(tuitionId, payerId, status) => {
+  const query = `SELECT * FROM payments where tuition_id = ? AND payer_id = ? AND status = ? LIMIT 1`;
+  const [rows] = await pool.query(query, [tuitionId, payerId, status])
+  return rows.length > 0 ? rows[0]: null;
+}
 
 const PaymentModel = {
   checkPaidTiontion,
   create,
   findPaymentById,
   updatePaymentSuccess,
-  updatePaymentOtp,
   updateStatus,
+  getDuplicatePayment
 };
 
 export default PaymentModel;

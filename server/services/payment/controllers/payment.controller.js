@@ -4,14 +4,12 @@ import {
   sendOtpCode,
   sendPaymentSuccessEmail,
 } from "../helpers/email.helper.js";
-import {
-  generateNewOtpCode,
-  generatePaymentCode,
-} from "../helpers/payment.helper.js";
+import { generatePaymentCode } from "../helpers/payment.helper.js";
 import { publishMessage } from "../messages/rabbitMQ.js";
 import dotenv from "dotenv";
 import axios from "axios";
 import OtpModel from "../models/OtpModel.js";
+import { generateNewOtpCode } from "../helpers/otp.helper.js";
 dotenv.config({ quite: true });
 
 const createPayment = async (req, res, next) => {
@@ -24,34 +22,40 @@ const createPayment = async (req, res, next) => {
     if (payer.balance < tuition.amount)
       throw CreateError.BadRequest("Số dư không đủ để thanh toán");
 
-    const paidTuition = await PaymentModel.checkPaidTiontion(
-      tuition.tuition_id
-    );
+    const paidTuition = await PaymentModel.checkPaidTiontion(tuition.tuition_id);
+    if (paidTuition) throw CreateError.Conflict("Học phí đã được thanh toán");
 
-    if (paidTuition) throw CreateError.Conflict("Hoc phí đã được thanh toán");
-
-    const paymentCode = generatePaymentCode(tuition);
-
-    const newPaymentId = await PaymentModel.create(
-      paymentCode,
+    // Kiểm tra payment đang chờ xử lý
+    let payment = await PaymentModel.getDuplicatePayment(
       tuition.tuition_id,
       payer.user_id,
-      tuition.amount
+      "PENDING"
     );
 
-    const { otpCode, otpExpireAt } = await generateNewOtpCode(newPaymentId, 1);
+    if (!payment) {
+      // Tạo payment mới nếu chưa có
+      const paymentCode = generatePaymentCode(tuition);
+      const newPaymentId = await PaymentModel.create(
+        paymentCode,
+        tuition.tuition_id,
+        payer.user_id,
+        tuition.amount
+      );
+      payment = await PaymentModel.findPaymentById(newPaymentId);
+    }
 
-    const getPayment = () => PaymentModel.findPaymentById(newPaymentId);
-    const createOtp = () => OtpModel.create(newPaymentId, otpCode, otpExpireAt);
-    const sendOtp = () => sendOtpCode(payer.email, payer.fullname, otpCode, 1);
-    const [payment] = await Promise.all([getPayment(), createOtp(), sendOtp()]);
+    // Tạo OTP
+    const { otpCode, otpExpireAt } = await generateNewOtpCode(payment.payment_id, 1);
+
+    // Song song: lưu OTP và gửi trực tiếp email
+    await Promise.all([
+      OtpModel.create(payment.payment_id, otpCode, otpExpireAt),
+      sendOtpCode(payer.email, payer.fullname, otpCode, 1),
+    ]);
 
     return res.status(201).json({
       message: "Xác nhận thanh toán. Vui lòng kiểm tra email để lấy mã OTP",
-      payment: {
-        ...payment,
-        otpCode: undefined,
-      },
+      payment,
       success: true,
     });
   } catch (error) {
@@ -99,15 +103,24 @@ const processPayment = async (req, res, next) => {
           success: true,
         });
       } catch (err) {
+        const isInsufficientBalance =
+          err.response?.status === 400 &&
+          err.response?.data?.message?.includes("balance");
+
+        const failReason = isInsufficientBalance
+          ? "Số dư không đủ"
+          : "Lỗi server, vui lòng thử lại";
+
         await PaymentModel.updateStatus(
           payment.payment_id,
           "FAILED",
-          "Số dư không đủ"
+          failReason
         );
-        await publishMessage("payment_failed", JSON.stringify(payment));
 
-        return res.status(400).json({
-          message: "Thanh toán không thành công do số dư không đủ",
+        await publishMessage("payment_failed", JSON.stringify(messageData));
+
+        return res.status(isInsufficientBalance ? 400 : 500).json({
+          message: `Thanh toán không thành công: ${failReason}`,
           success: false,
         });
       }

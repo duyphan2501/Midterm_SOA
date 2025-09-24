@@ -63,12 +63,12 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
       toast.error("Dữ liệu học phí không tồn tại. Vui lòng kiểm tra lại.");
       return;
     }
-    console.log(user)
     await createPayment(tuition, user);
     const payment = usePaymentStore.getState().payment;
-    console.log(payment);
-    onOtpDialogChange(true);
-    setShowOtpDialog(true);
+    if (payment) {
+      onOtpDialogChange(true);
+      setShowOtpDialog(true);
+    }
   };
 
   const closeOtpDialog = () => {
