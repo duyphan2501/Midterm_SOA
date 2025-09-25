@@ -43,7 +43,6 @@ const useUserStore = create((set) => ({
       set({ user: res.data.user });
     } catch (error) {
       localStorage.removeItem("accessToken");
-      console.error("Refresh user error:", error);
     }
   },
 }));

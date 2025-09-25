@@ -26,7 +26,7 @@ const TermsAgreement = ({ paymentData, setPaymentData }) => {
   ];
 
   return (
-    <Fade in timeout={800}>
+    <Fade in timeout={1200}>
       <div className="">
         <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
           <Chip

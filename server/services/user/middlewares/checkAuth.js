@@ -13,7 +13,6 @@ const checkAuth = (req, res, next) => {
   if (token === process.env.SERVICE_TOKEN) 
     return next()
 
-  console.log("Token:", token); // Debugging line
   jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) return res.status(403).json({ message: "Token is not valid" });
     req.user = decoded;

@@ -22,7 +22,9 @@ const createPayment = async (req, res, next) => {
     if (payer.balance < tuition.amount)
       throw CreateError.BadRequest("Số dư không đủ để thanh toán");
 
-    const paidTuition = await PaymentModel.checkPaidTiontion(tuition.tuition_id);
+    const paidTuition = await PaymentModel.checkPaidTiontion(
+      tuition.tuition_id
+    );
     if (paidTuition) throw CreateError.Conflict("Học phí đã được thanh toán");
 
     // Kiểm tra payment đang chờ xử lý
@@ -45,12 +47,15 @@ const createPayment = async (req, res, next) => {
     }
 
     // Tạo OTP
-    const { otpCode, otpExpireAt } = await generateNewOtpCode(payment.payment_id, 1);
+    const { otpCode, otpExpireAt } = await generateNewOtpCode(
+      payment.payment_id,
+      1
+    );
 
     // Song song: lưu OTP và gửi trực tiếp email
     await Promise.all([
       OtpModel.create(payment.payment_id, otpCode, otpExpireAt),
-      sendOtpCode(payer.email, payer.fullname, otpCode, 1),
+      // sendOtpCode(payer.email, payer.fullname, otpCode, 1),
     ]);
 
     return res.status(201).json({
@@ -89,12 +94,12 @@ const processPayment = async (req, res, next) => {
         const payer = response.data.user;
         await Promise.all([
           publishMessage("payment_success", JSON.stringify(payment)),
-          sendPaymentSuccessEmail(
-            payer.email,
-            payer.fullname,
-            payment.payment_code,
-            payment.amount
-          ),
+          // sendPaymentSuccessEmail(
+          //   payer.email,
+          //   payer.fullname,
+          //   payment.payment_code,
+          //   payment.amount
+          // ),
         ]);
 
         return res.status(200).json({
@@ -105,7 +110,7 @@ const processPayment = async (req, res, next) => {
       } catch (err) {
         const isInsufficientBalance =
           err.response?.status === 400 &&
-          err.response?.data?.message?.includes("balance");
+          err.response?.data?.message?.includes("không đủ");
 
         const failReason = isInsufficientBalance
           ? "Số dư không đủ"
@@ -117,7 +122,7 @@ const processPayment = async (req, res, next) => {
           failReason
         );
 
-        await publishMessage("payment_failed", JSON.stringify(messageData));
+        await publishMessage("payment_failed", JSON.stringify(payment));
 
         return res.status(isInsufficientBalance ? 400 : 500).json({
           message: `Thanh toán không thành công: ${failReason}`,
@@ -198,4 +203,21 @@ const sendOtp = async (req, res, next) => {
   }
 };
 
-export { createPayment, processPayment, sendOtp };
+const getPaymentHistory = async (req, res, next) => {
+  try {
+    const { payerId } = req.params;
+
+    if (!payerId) throw CreateError.BadRequest("Thiếu mã người thanh toán");
+
+    const payments = await PaymentModel.getPaymentHistoryByPayerId(payerId);
+
+    return res.status(200).json({
+      payments,
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { createPayment, processPayment, sendOtp, getPaymentHistory };

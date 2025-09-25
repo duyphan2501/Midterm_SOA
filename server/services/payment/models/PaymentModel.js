@@ -82,13 +82,20 @@ const getDuplicatePayment = async(tuitionId, payerId, status) => {
   return rows.length > 0 ? rows[0]: null;
 }
 
+const getPaymentHistoryByPayerId = async (payerId) => {
+  const query = `SELECT payment_code, tuition_id, updated_at, description, amount, status FROM payments where payer_id = ? AND status != ? ORDER BY updated_at DESC`;
+  const [rows] = await pool.query(query, [payerId, "PENDING"])
+  return rows.length > 0 ? rows: [];
+}
+
 const PaymentModel = {
   checkPaidTiontion,
   create,
   findPaymentById,
   updatePaymentSuccess,
   updateStatus,
-  getDuplicatePayment
+  getDuplicatePayment,
+  getPaymentHistoryByPayerId
 };
 
 export default PaymentModel;
