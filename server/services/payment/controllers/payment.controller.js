@@ -88,6 +88,11 @@ const processPayment = async (req, res, next) => {
           {
             userId: payment.payer_id,
             decreaseAmount: payment.amount,
+          }, 
+          {
+            headers:{
+            Authorization: `Bearer ${process.env.SERVICE_TOKEN}`,
+          },
           }
         );
 
@@ -109,7 +114,15 @@ const processPayment = async (req, res, next) => {
           success: true,
         });
       } catch (err) {
-        const isInsufficientBalance = err.response?.status === 409;
+        const statusCode = err.response?.status || 500
+
+        if (statusCode === 401 || statusCode === 403)
+          return res.status(statusCode).json({
+          message: `Phiên đăng nhập đã hết hạn`,
+          success: false,
+        });
+
+        const isInsufficientBalance = statusCode === 409;
         const failReason = isInsufficientBalance
           ? "Số dư không đủ"
           : "Lỗi server, vui lòng thử lại sau";
@@ -120,9 +133,11 @@ const processPayment = async (req, res, next) => {
           failReason
         );
 
-        await publishMessage("payment_failed", JSON.stringify(paymentMessage));
+        console.error(err)
 
-        return res.status(isInsufficientBalance ? 400 : 500).json({
+        await publishMessage("payment_failed", JSON.stringify({tuitionId: payment.tuition_id}));
+
+        return res.status(statusCode).json({
           message: `Thanh toán không thành công: ${failReason}`,
           success: false,
         });
@@ -187,7 +202,7 @@ const sendOtp = async (req, res, next) => {
 
     const { otpCode, otpExpireAt } = await generateNewOtpCode(paymentId, 1);
 
-    // await sendOtpCode(payer.email, payer.fullname, otpCode, 1);
+    await sendOtpCode(payer.email, payer.fullname, otpCode, 1);
 
     await OtpModel.create(paymentId, otpCode, otpExpireAt);
 

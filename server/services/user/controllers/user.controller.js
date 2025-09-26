@@ -62,7 +62,6 @@ const refreshUser = async (req, res, next) => {
     const userId = req.user.userId;
     if (!userId) throw CreateError.Unauthorized();
     const user = await UserModel.findUserById(userId);
-    console.log(user);
     if (!user) throw CreateError.NotFound("Người dùng không tồn tại");
     return res.status(200).json({
       message: "Lấy thông tin user thành công",

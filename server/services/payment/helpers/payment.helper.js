@@ -10,10 +10,10 @@ const generatePaymentCode = (tuition, prefix = "HP") => {
   .replace(/[\s_]/g, "")
   .toUpperCase();
 
-  const timestamp = Date.now().toString().slice(-4); 
+  const timestamp = Date.now().toString().slice(-2); 
   const randomHash = Math.random().toString(36).substring(2, 4).toUpperCase();
 
-  return `${prefix}${tuition.student_id}${normalized}${timestamp}${randomHash}`;
+  return `${prefix}${tuition.student_id}${normalized}_${timestamp}${randomHash}`;
 };
 
 export { generatePaymentCode };

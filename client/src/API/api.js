@@ -27,7 +27,7 @@ API.interceptors.response.use(
         const { clearUser } = useUserStore.getState();
         clearUser();
 
-        toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        toast.info("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
       }
     }
 

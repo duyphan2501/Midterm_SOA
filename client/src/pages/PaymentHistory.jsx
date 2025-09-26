@@ -55,8 +55,6 @@ const PaymentHistory = () => {
   };
 
   const fetchPaymentHistory = async () => {
-    console.log("load");
-
     setIsLoading(true);
     try {
       const payments = (await getPaymentHistory(user.user_id)) || [];

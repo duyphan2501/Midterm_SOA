@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_GATEWAY_API_URL || "http://localhost:3000";
 
 const usePaymentStore = create((set) => ({
   isProcessing: false,
+  isSending: false,
   payment: null,
   createPayment: async (tuition, payer) => {
     set({ isProcessing: true });
@@ -43,7 +44,7 @@ const usePaymentStore = create((set) => ({
           },
         }
       );
-      toast.success(res.data.message && "Payment successful");
+      toast.success(res.data.message || "Payment successful");
       set({ payment: null });
       return res.data.payer;
     } catch (error) {
@@ -73,6 +74,30 @@ const usePaymentStore = create((set) => ({
       }
     } finally {
       set({ isProcessing: false });
+    }
+  },
+
+  sendOtp: async (payer, paymentId) => {
+    set({ isSending: true });
+    try {
+      const url = `${API_URL}/api/payments/otp/send`;
+      const res = await API.put(
+        url,
+        { payer, paymentId },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      toast.success(res.data.message || "Gửi OTP thành công")
+    } catch (error) {
+      if (error.response.status !== 401 && error.response.status !== 403) {
+        toast.error(error.response?.data?.message || "Send otp failed");
+        console.error("Send otp error", error);
+      }
+    } finally {
+      set({ isSending: false });
     }
   },
 }));

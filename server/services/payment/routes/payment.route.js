@@ -5,7 +5,7 @@ const router = express.Router()
 
 router.post("/create", checkAuth, createPayment)
 router.put("/process", processPayment)
-router.put("/otp/send", sendOtp)
+router.put("/otp/send", checkAuth, sendOtp)
 router.get("/history/:payerId", checkAuth, getPaymentHistory)
 
 export default router

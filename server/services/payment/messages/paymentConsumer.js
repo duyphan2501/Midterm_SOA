@@ -10,10 +10,14 @@ const startConsumer = async () => {
       "email_payment_success",
       async (msg) => {
         const payment = JSON.parse(msg);
+        if (!payment.email)
+            throw new Error("Email receiver is missing")
+        const tuition = payment.paymentCode?.split("_")[0];
+
         await sendPaymentSuccessEmail(
           payment.email,
           payment.fullname,
-          payment.paymentCode,
+          tuition,
           payment.amount
         )
       }
