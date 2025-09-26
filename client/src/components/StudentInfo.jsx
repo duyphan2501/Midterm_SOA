@@ -55,7 +55,7 @@ const StudentInfo = ({
         </Typography>
       </Box>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4">
         <Grid size={{ xs: 12, md: 4 }}>
           <Typography
             variant="body2"

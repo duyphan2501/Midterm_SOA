@@ -80,7 +80,7 @@ const processPayment = async (req, res, next) => {
       otpCode
     );
 
-    // Case 1: update thành công -> tiếp tục flow balance
+    // update thành công -> thử trừ balance
     if (affectedRows > 0) {
       try {
         const response = await axios.put(
@@ -92,15 +92,16 @@ const processPayment = async (req, res, next) => {
         );
 
         const payer = response.data.user;
-        await Promise.all([
-          publishMessage("payment_success", JSON.stringify(payment)),
-          // sendPaymentSuccessEmail(
-          //   payer.email,
-          //   payer.fullname,
-          //   payment.payment_code,
-          //   payment.amount
-          // ),
-        ]);
+
+        const paymentMessage = {
+          email: payer.email,
+          fullname: payer.fullname,
+          tuitionId: payment.tuition_id,
+          paymentCode: payment.payment_code,
+          amount: payment.amount,
+        };
+
+        await publishMessage("payment_success", JSON.stringify(paymentMessage));
 
         return res.status(200).json({
           message: "Thanh toán thành công!",
@@ -108,13 +109,10 @@ const processPayment = async (req, res, next) => {
           success: true,
         });
       } catch (err) {
-        const isInsufficientBalance =
-          err.response?.status === 400 &&
-          err.response?.data?.message?.includes("không đủ");
-
+        const isInsufficientBalance = err.response?.status === 409;
         const failReason = isInsufficientBalance
           ? "Số dư không đủ"
-          : "Lỗi server, vui lòng thử lại";
+          : "Lỗi server, vui lòng thử lại sau";
 
         await PaymentModel.updateStatus(
           payment.payment_id,
@@ -122,7 +120,7 @@ const processPayment = async (req, res, next) => {
           failReason
         );
 
-        await publishMessage("payment_failed", JSON.stringify(payment));
+        await publishMessage("payment_failed", JSON.stringify(paymentMessage));
 
         return res.status(isInsufficientBalance ? 400 : 500).json({
           message: `Thanh toán không thành công: ${failReason}`,
@@ -131,12 +129,12 @@ const processPayment = async (req, res, next) => {
       }
     }
 
-    // Case 2: deadlock (MySQL rollback)
+    // deadlock (MySQL rollback)
     if (affectedRows === -1) {
       throw CreateError.Conflict("Thanh toán đang được xử lý bởi yêu cầu khác");
     }
 
-    // Case 3: OTP invalid
+    // OTP invalid
     const otpRecord = await OtpModel.getValidOtpByPaymentId(payment.payment_id);
     if (!otpRecord)
       throw CreateError.Unauthorized(

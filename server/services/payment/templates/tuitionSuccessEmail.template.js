@@ -12,7 +12,7 @@ const tuitionSuccessEmail = (payer, tuition, amount, date) => {
             <p>We are pleased to inform you that your tuition payment has been processed successfully.</p>
             <div style="margin: 20px 0; padding: 15px; border: 1px solid #eee; border-radius: 6px; background: #fdfdfd;">
               <p><b>Tuition:</b> ${tuition}</p>
-              <p><b>Amount Paid:</b> $${amount.toLocaleString()}</p>
+              <p><b>Amount Paid:</b> ${amount.toLocaleString()} VNĐ</p>
               <p><b>Payment Date:</b> ${date}</p>
             </div>
             <p>Thank you for your prompt payment. You can now continue to access your courses without interruption.</p>

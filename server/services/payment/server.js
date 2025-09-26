@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { checkConnection } from "./database/connectDB.js";
 import router from "./routes/payment.route.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import { startConsumer } from "./messages/paymentConsumer.js";
 dotenv.config({ quite: true });
 
 const app = express();
@@ -23,4 +24,5 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
   console.log(`Payments service on ${PORT}`);
   await checkConnection();
+  await startConsumer();
 });

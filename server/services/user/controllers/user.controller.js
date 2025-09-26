@@ -43,7 +43,7 @@ const decreaseBalance = async (req, res, next) => {
       userId
     );
     if (affectedRows === 0)
-      throw CreateError.BadRequest("Số dư không đủ để thanh toán");
+      throw CreateError.Conflict("Số dư không đủ để thanh toán");
 
     const user = await UserModel.findUserById(userId)
 

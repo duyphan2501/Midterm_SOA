@@ -93,7 +93,7 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
         />
 
         <Paper elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 2 }}>
-          <div className="lg:flex gap-7 mb-4">
+          <div className="lg:flex gap-7">
             <div className="flex-1">
               <PaymentInfo
                 user={user}
@@ -102,7 +102,7 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
               />
             </div>
 
-            <div className="flex-1 mt-5 lg:mt-0">
+            <div className="flex-1 mt-8 lg:mt-0">
               <TermsAgreement
                 paymentData={paymentData}
                 setPaymentData={setPaymentData}
@@ -110,23 +110,25 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
             </div>
           </div>
           {studentInfo.fullname && (
-            <PaymentStatus
-              open={studentInfo.fullname}
-              status={
-                studentInfo.tuitionFee !== 0 &&
-                studentInfo.tuitionFee <= user.balance
-                  ? "success"
-                  : "error"
-              }
-              message={
-                studentInfo.tuitionFee !== 0 &&
-                studentInfo.tuitionFee <= user.balance
-                  ? "Có thể thanh toán: Số dư đủ để thực hiện giao dịch"
-                  : `Không thể thanh toán: Số dư không đủ (thiếu ${(
-                      studentInfo.tuitionFee - user.balance
-                    ).toLocaleString("vi-VN")} VNĐ)`
-              }
-            />
+            <div className="mt-4">
+              <PaymentStatus
+                open={studentInfo.fullname}
+                status={
+                  studentInfo.tuitionFee !== 0 &&
+                  studentInfo.tuitionFee <= user.balance
+                    ? "success"
+                    : "error"
+                }
+                message={
+                  studentInfo.tuitionFee !== 0 &&
+                  studentInfo.tuitionFee <= user.balance
+                    ? "Có thể thanh toán: Số dư đủ để thực hiện giao dịch"
+                    : `Không thể thanh toán: Số dư không đủ (thiếu ${(
+                        studentInfo.tuitionFee - user.balance
+                      ).toLocaleString("vi-VN")} VNĐ)`
+                }
+              />
+            </div>
           )}
         </Paper>
 

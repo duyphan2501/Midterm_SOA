@@ -29,13 +29,7 @@ import {
 } from "@mui/icons-material";
 import useUserStore from "../stores/userStore";
 
-const Sidebar = ({
-  user,
-  currentPage,
-  onPageChange,
-  open,
-  onToggle,
-}) => {
+const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
   if (!user) return null;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -46,12 +40,11 @@ const Sidebar = ({
   const onLogout = () => {
     logout();
     onPageChange("login");
-  }
+  };
 
   const SidebarContent = () => (
     <Box
       sx={{
-        width: drawerWidth,
         height: "100%",
         display: "flex",
         flexDirection: "column",
@@ -287,4 +280,3 @@ const MobileHeader = ({ onToggle }) => {
 
 export default Sidebar;
 export { MobileHeader };
-

@@ -10,8 +10,8 @@ const startConsumer = async () => {
       "tuition_payment_success",
       async (msg) => {
         const payment = JSON.parse(msg);
-        const affectedRows = await TuitionModel.updateStatus(payment.tuition_id, "PAID");
-        if (affectedRows === 1) console.log(`Tuition ${payment.tuition_id} marked PAID`);
+        const affectedRows = await TuitionModel.updateStatus(payment.tuitionId, "PAID");
+        if (affectedRows === 1) console.log(`Tuition ${payment.tuitionId} marked PAID`);
         else throw new Error("Cannot update tuition status");
       }
     );
@@ -21,8 +21,8 @@ const startConsumer = async () => {
       "tuition_payment_failed",
       async (msg) => {
         const payment = JSON.parse(msg);
-        const affectedRows = await TuitionModel.updateStatus(payment.tuition_id, "UNPAID");
-        if (affectedRows === 1) console.log(`Tuition ${payment.tuition_id} marked UNPAID`);
+        const affectedRows = await TuitionModel.updateStatus(payment.tuitionId, "UNPAID");
+        if (affectedRows === 1) console.log(`Tuition ${payment.tuitionId} marked UNPAID`);
         else throw new Error("Cannot update tuition status");
       }
     );
