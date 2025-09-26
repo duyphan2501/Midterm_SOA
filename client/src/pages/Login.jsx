@@ -8,7 +8,8 @@ const LoginPage = ({ setCurrentPage }) => {
   const login = useUserStore((state) => state.login);
   const isLogin = useUserStore((state) => state.isLogin);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     if (isLogin) return;
     await login(loginData.username.trim(), loginData.password);
     if (useUserStore.getState().user)
@@ -31,8 +32,8 @@ const LoginPage = ({ setCurrentPage }) => {
             </p>
           </div>
 
-          <div className="space-y-6">
-            <div>
+          <form className="" onSubmit={handleSubmit}>
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tên đăng nhập
               </label>
@@ -53,7 +54,7 @@ const LoginPage = ({ setCurrentPage }) => {
               </div>
             </div>
 
-            <div>
+            <div className="mb-7">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Mật khẩu
               </label>
@@ -86,7 +87,7 @@ const LoginPage = ({ setCurrentPage }) => {
             </div>
 
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={!loginData.username || !loginData.password}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
@@ -99,7 +100,7 @@ const LoginPage = ({ setCurrentPage }) => {
                 "Đăng nhập"
               )}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>

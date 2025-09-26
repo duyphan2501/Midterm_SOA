@@ -29,7 +29,7 @@ const useUserStore = create((set) => ({
   logout: () => {
     set({ user: null });
     localStorage.removeItem("accessToken");
-    toast.info("Logged out");
+    toast.info("Đã đăng xuất");
   },
   refreshUser: async () => {
     try {
