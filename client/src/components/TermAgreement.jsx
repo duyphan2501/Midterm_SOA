@@ -1,10 +1,8 @@
-import React from "react";
 import {
   Box,
   Typography,
   Checkbox,
   FormControlLabel,
-  Paper,
   List,
   ListItem,
   ListItemIcon,

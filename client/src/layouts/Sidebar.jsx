@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Drawer,
@@ -9,7 +8,6 @@ import {
   ListItemText,
   Typography,
   Avatar,
-  Divider,
   Button,
   useTheme,
   useMediaQuery,
@@ -121,7 +119,7 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
               sx={{ fontSize: 16, color: "success.main", mr: 1 }}
             />
             <Typography variant="body2" fontWeight="600" color="success.main">
-              {user.balance.toLocaleString("vi-VN")} VNĐ
+              {user.balance.toLocaleString()} VNĐ
             </Typography>
           </Box>
         </Box>

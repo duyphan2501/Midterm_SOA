@@ -7,7 +7,6 @@ import { ToastContainer, Bounce } from "react-toastify";
 import useUserStore from "./stores/userStore.js";
 import { useEffect, useState } from "react";
 import Loading from "./components/Loading.jsx";
-import OTPScreen from "./components/OTPScreen.jsx";
 
 function App() {
   const user = useUserStore((state) => state.user);

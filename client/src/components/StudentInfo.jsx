@@ -7,7 +7,6 @@ import {
   InputAdornment,
   Chip,
   Fade,
-  Slide,
   Button,
 } from "@mui/material";
 import { School, Person, CreditCard, Category } from "@mui/icons-material";
