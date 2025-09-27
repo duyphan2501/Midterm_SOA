@@ -1,8 +1,10 @@
 import amqp from "amqplib";
+import dotenv from "dotenv"
+dotenv.config({quiet: true})
 
 const connectMQ = async () => {
   try {
-    return await amqp.connect();
+    return await amqp.connect(process.env.AMQP_URL_DOCKER);
   } catch (error) {
     console.log(error);
   }

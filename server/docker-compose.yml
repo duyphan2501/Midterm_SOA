@@ -1,50 +1,115 @@
-version: "3.9"
 services:
-  mongo:
-    image: mongo:6
-    container_name: mongo
-    ports: ["27017:27017"]
-    volumes:
-      - mongo_data:/data/db
+  client:
+    build: ../client
+    ports:
+      - "5173:5173"
+    networks:
+      - midsoa
+    depends_on:
+      - gateway
+    environment:
+      VITE_GATEWAY_API_URL: http://gateway:${GATEWAY_PORT}  
 
+  mysqldb:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - midsoa
+    restart: unless-stopped
+
+  rabbitmq:
+    networks:
+      - midsoa
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+  
   gateway:
     build: ./gateway
+    networks:
+      - midsoa
+    ports:
+      - "3000:3000"
     env_file: .env
-    ports: ["8000:8000"]
-    depends_on: [users, products, orders]
+    depends_on: [users, tuitions, payments]
     environment:
       GATEWAY_PORT: ${GATEWAY_PORT}
-      USERS_TARGET: http://users:${USERS_PORT}
-      PRODUCTS_TARGET: http://products:${PRODUCTS_PORT}
-      ORDERS_TARGET: http://orders:${ORDERS_PORT}
-
+      USERS_URL: http://users:${USERS_PORT}
+      TUITIONS_URL: http://tuitions:${TUITIONS_PORT}
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
+    
   users:
-    build: ./services/users
-    env_file: .env
+    build: ./services/user
+    networks:
+      - midsoa
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    depends_on: [mysqldb]
     environment:
-      PORT: ${USERS_PORT}
-      JWT_SECRET: ${JWT_SECRET}
-      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/usersdb
-    depends_on: [mongo]
+      PORT: ${PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+      MYSQL_DB_HOST: mysqldb
+      MYSQL_DB_USER: ${MYSQL_DB_USER}
+      MYSQL_DB_PASS: 123456
+      MYSQL_DB_NAME: ${MYSQL_USERDB_NAME}
+      MYSQL_DB_PORT: ${MYSQL_DB_PORT}
 
-  products:
-    build: ./services/products
-    env_file: .env
+  tuitions:
+    build: ./services/tuition
+    networks:
+      - midsoa
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env
+    depends_on: [mysqldb, rabbitmq]
     environment:
-      PORT: ${PRODUCTS_PORT}
-      JWT_SECRET: ${JWT_SECRET}
-      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/productsdb
-    depends_on: [mongo]
+      PORT: ${PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+      AMQP_URL_DOCKER: ${AMQP_URL_DOCKER}
+      MYSQL_DB_HOST: mysqldb
+      MYSQL_DB_USER: ${MYSQL_DB_USER}
+      MYSQL_DB_PASS: 123456
+      MYSQL_DB_NAME: ${MYSQL_TUITIONDB_NAME}
+      MYSQL_DB_PORT: ${MYSQL_DB_PORT}
 
-  orders:
-    build: ./services/orders
-    env_file: .env
+  payments:
+    build: ./services/payment
+    networks:
+      - midsoa
+    ports:
+      - "3003:3003"
+    env_file:
+      - .env
+    depends_on: [mysqldb, rabbitmq, users, tuitions]
     environment:
-      PORT: ${ORDERS_PORT}
-      JWT_SECRET: ${JWT_SECRET}
-      MONGO_URI: mongodb://${MONGO_HOST}:${MONGO_PORT}/ordersdb
-      PRODUCTS_URL: ${PRODUCTS_URL}
-    depends_on: [mongo, products]
+      PORT: ${PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+      AMQP_URL_DOCKER: ${AMQP_URL_DOCKER}
+      MYSQL_DB_HOST: mysqldb
+      MYSQL_DB_USER: ${MYSQL_DB_USER}
+      MYSQL_DB_PASS: 123456
+      MYSQL_DB_NAME: ${MYSQL_PAYMENTDB_NAME}
+      MYSQL_DB_PORT: ${MYSQL_DB_PORT}
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_APP_PASSWORD: ${EMAIL_APP_PASSWORD}
 
+networks:
+  midsoa:
+    driver: bridge
+  
 volumes:
-  mongo_data:
+  mysql_data:
