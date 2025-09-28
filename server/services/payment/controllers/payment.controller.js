@@ -55,7 +55,7 @@ const createPayment = async (req, res, next) => {
     // Song song: lưu OTP và gửi trực tiếp email
     await Promise.all([
       OtpModel.create(payment.payment_id, otpCode, otpExpireAt),
-      // sendOtpCode(payer.email, payer.fullname, otpCode, 1),
+      sendOtpCode(payer.email, payer.fullname, otpCode, 1),
     ]);
 
     return res.status(201).json({

@@ -1,17 +1,7 @@
 services:
-  client:
-    build: ../client
-    ports:
-      - "5173:5173"
-    networks:
-      - midsoa
-    depends_on:
-      - gateway
-    environment:
-      VITE_GATEWAY_API_URL: http://gateway:${GATEWAY_PORT}  
-
   mysqldb:
     image: mysql:8.0
+    container_name: mysqldb
     environment:
       MYSQL_ROOT_PASSWORD: 123456
     ports:
@@ -22,46 +12,51 @@ services:
     networks:
       - midsoa
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
 
   rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
     networks:
       - midsoa
-    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
     ports:
       - "5672:5672"
       - "15672:15672"
     restart: unless-stopped
-  
-  gateway:
-    build: ./gateway
-    networks:
-      - midsoa
-    ports:
-      - "3000:3000"
-    env_file: .env
-    depends_on: [users, tuitions, payments]
-    environment:
-      GATEWAY_PORT: ${GATEWAY_PORT}
-      USERS_URL: http://users:${USERS_PORT}
-      TUITIONS_URL: http://tuitions:${TUITIONS_PORT}
-      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
-    
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   users:
     build: ./services/user
     networks:
       - midsoa
     ports:
       - "3001:3001"
-    env_file:
-      - .env
-    depends_on: [mysqldb]
+    depends_on:
+      mysqldb:
+        condition: service_healthy
     environment:
-      PORT: ${PORT}
+      PORT: ${USERS_PORT}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       SERVICE_TOKEN: ${SERVICE_TOKEN}
       MYSQL_DB_HOST: mysqldb
       MYSQL_DB_USER: ${MYSQL_DB_USER}
-      MYSQL_DB_PASS: 123456
+      MYSQL_DB_PASS: ${MYSQL_DB_PASS}
       MYSQL_DB_NAME: ${MYSQL_USERDB_NAME}
       MYSQL_DB_PORT: ${MYSQL_DB_PORT}
 
@@ -71,19 +66,22 @@ services:
       - midsoa
     ports:
       - "3002:3002"
-    env_file:
-      - .env
-    depends_on: [mysqldb, rabbitmq]
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     environment:
-      PORT: ${PORT}
+      PORT: ${TUITIONS_PORT}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       SERVICE_TOKEN: ${SERVICE_TOKEN}
-      AMQP_URL_DOCKER: ${AMQP_URL_DOCKER}
+      AMQP_URL_DOCKER: amqp://admin:admin@rabbitmq:5672
       MYSQL_DB_HOST: mysqldb
       MYSQL_DB_USER: ${MYSQL_DB_USER}
-      MYSQL_DB_PASS: 123456
+      MYSQL_DB_PASS: ${MYSQL_DB_PASS}
       MYSQL_DB_NAME: ${MYSQL_TUITIONDB_NAME}
       MYSQL_DB_PORT: ${MYSQL_DB_PORT}
+    restart: on-failure
 
   payments:
     build: ./services/payment
@@ -91,21 +89,61 @@ services:
       - midsoa
     ports:
       - "3003:3003"
-    env_file:
-      - .env
-    depends_on: [mysqldb, rabbitmq, users, tuitions]
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      users:
+        condition: service_started
+      tuitions:
+        condition: service_started
     environment:
-      PORT: ${PORT}
+      PORT: ${PAYMENTS_PORT}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       SERVICE_TOKEN: ${SERVICE_TOKEN}
-      AMQP_URL_DOCKER: ${AMQP_URL_DOCKER}
+      AMQP_URL_DOCKER: amqp://admin:admin@rabbitmq:5672
       MYSQL_DB_HOST: mysqldb
       MYSQL_DB_USER: ${MYSQL_DB_USER}
-      MYSQL_DB_PASS: 123456
+      MYSQL_DB_PASS: ${MYSQL_DB_PASS}
       MYSQL_DB_NAME: ${MYSQL_PAYMENTDB_NAME}
       MYSQL_DB_PORT: ${MYSQL_DB_PORT}
       EMAIL_USERNAME: ${EMAIL_USERNAME}
       EMAIL_APP_PASSWORD: ${EMAIL_APP_PASSWORD}
+      USER_SERVICE_HOST: http://users:${USERS_PORT}
+    restart: on-failure
+
+  gateway:
+    build: ./gateway
+    networks:
+      - midsoa
+    ports:
+      - "3000:3000"
+    env_file: .env
+    depends_on:
+      users:
+        condition: service_started
+      tuitions:
+        condition: service_started
+      payments:
+        condition: service_started
+    environment:
+      GATEWAY_PORT: ${GATEWAY_PORT}
+      USERS_URL: http://users:${USERS_PORT}
+      TUITIONS_URL: http://tuitions:${TUITIONS_PORT}
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
+
+  client:
+    build: ../client
+    ports:
+      - "5173:80"
+    networks:
+      - midsoa
+    depends_on:
+      gateway:
+        condition: service_started
+    environment:
+      VITE_GATEWAY_API_URL: http://localhost:${GATEWAY_PORT}
 
 networks:
   midsoa:
