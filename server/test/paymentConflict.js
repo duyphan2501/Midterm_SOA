@@ -22,7 +22,6 @@ const req2 = () =>
     },
   });
 
-
 const test = async () => {
   const results = await Promise.allSettled([
     (async () => {

@@ -36,7 +36,7 @@ const decreaseBalance = async (req, res, next) => {
   try {
     const { userId, decreaseAmount } = req.body;
     if (!userId || !decreaseAmount)
-      throw CreateError.BadRequest("UserId or decreaseAmount is missing");
+      throw CreateError.BadRequest("Mã người dùng và số tiền trừ phải được cung cấp");
     
     const affectedRows = await UserModel.decreaseBalance(
       decreaseAmount,

@@ -16,6 +16,15 @@ import { Circle } from "@mui/icons-material";
 const TermsAgreement = ({ paymentData, setPaymentData }) => {
   const theme = useTheme();
 
+  const handleChangeTermAgreement = (e) => {
+    const isAgreed = e.target.checked;
+    localStorage.setItem("isAgreed", isAgreed);
+    setPaymentData((prev) => ({
+      ...prev,
+      acceptTerms: isAgreed,
+    }));
+  };  
+
   const terms = [
     "Giao dịch thanh toán học phí chỉ được thực hiện một lần cho mỗi kỳ học",
     "Số tiền thanh toán phải bằng đúng số tiền học phí cần nộp",
@@ -80,12 +89,7 @@ const TermsAgreement = ({ paymentData, setPaymentData }) => {
           control={
             <Checkbox
               checked={paymentData.acceptTerms}
-              onChange={(e) =>
-                setPaymentData((prev) => ({
-                  ...prev,
-                  acceptTerms: e.target.checked,
-                }))
-              }
+              onChange={handleChangeTermAgreement}
               sx={{
                 "&.Mui-checked": {
                   color: theme.palette.primary.main,

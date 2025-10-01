@@ -111,6 +111,8 @@ services:
       EMAIL_USERNAME: ${EMAIL_USERNAME}
       EMAIL_APP_PASSWORD: ${EMAIL_APP_PASSWORD}
       USER_SERVICE_HOST: http://users:${USERS_PORT}
+      ARCJET_ENV: ${ARCJET_ENV}
+      ARCJET_KEY: ${ARCJET_KEY}
     restart: on-failure
 
   gateway:

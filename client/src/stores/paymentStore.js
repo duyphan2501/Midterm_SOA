@@ -21,6 +21,7 @@ const usePaymentStore = create((set) => ({
         }
       );
       set({ payment: res.data.payment });
+      toast.info(res.data.message)
     } catch (error) {
       if (error.response.status !== 401 && error.response.status !== 403) {
         toast.error(error.response?.data?.message || "Create payment failed");

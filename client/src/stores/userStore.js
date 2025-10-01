@@ -34,7 +34,6 @@ const useUserStore = create((set) => ({
   refreshUser: async () => {
     try {
       const url = `${API_URL}/api/users/refresh`;
-      console.log(localStorage.getItem("accessToken"));
       const res = await API.get(url, {
         headers: {  
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,

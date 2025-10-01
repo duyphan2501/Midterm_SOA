@@ -1,6 +1,6 @@
 import { pool } from "../database/connectDB.js";
 
-const checkPaidTiontion = async (tuitionId) => {
+const checkPaidTuition = async (tuitionId) => {
   const query = `SELECT 1 FROM payments WHERE tuition_id = ? AND status = ? LIMIT 1`;
   const [rows] = await pool.query(query, [tuitionId, "SUCCESS"]);
   return rows.length > 0;
@@ -89,7 +89,7 @@ const getPaymentHistoryByPayerId = async (payerId) => {
 }
 
 const PaymentModel = {
-  checkPaidTiontion,
+  checkPaidTuition,
   create,
   findPaymentById,
   updatePaymentSuccess,

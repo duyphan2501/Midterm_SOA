@@ -9,7 +9,6 @@ const checkAuth = (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
   if (!token) return res.status(401).json({ message: "Invalid token format" });
-  console.log("Token:", token); // Debugging line
   jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) return res.status(403).json({ message: "Token is not valid" });
     req.user = decoded;

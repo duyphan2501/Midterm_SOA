@@ -17,14 +17,12 @@ const createPayment = async (req, res, next) => {
     const { tuition, payer } = req.body;
 
     if (!tuition || !payer)
-      throw CreateError.BadRequest("Tuition or payer is missing");
+      throw CreateError.BadRequest("Học phí và người trả phải được cung cấp");
 
     if (payer.balance < tuition.amount)
       throw CreateError.BadRequest("Số dư không đủ để thanh toán");
 
-    const paidTuition = await PaymentModel.checkPaidTiontion(
-      tuition.tuition_id
-    );
+    const paidTuition = await PaymentModel.checkPaidTuition(tuition.tuition_id);
     if (paidTuition) throw CreateError.Conflict("Học phí đã được thanh toán");
 
     // Kiểm tra payment đang chờ xử lý
@@ -44,7 +42,20 @@ const createPayment = async (req, res, next) => {
         tuition.amount
       );
       payment = await PaymentModel.findPaymentById(newPaymentId);
-    }
+      console.log(payment);
+    } else {
+      // nếu otp còn hiệu lực thì ko gửi otp lại
+      const existingOtp = await OtpModel.getValidOtpByPaymentId(
+        payment.payment_id
+      );
+      console.log(existingOtp);
+      if (existingOtp)
+        return res.status(200).json({
+          message: "Vui lòng nhập mã OTP đã được gửi.",
+          payment,
+          success: true,
+        });
+    } 
 
     // Tạo OTP
     const { otpCode, otpExpireAt } = await generateNewOtpCode(
@@ -52,14 +63,13 @@ const createPayment = async (req, res, next) => {
       1
     );
 
-    // Song song: lưu OTP và gửi trực tiếp email
     await Promise.all([
       OtpModel.create(payment.payment_id, otpCode, otpExpireAt),
       sendOtpCode(payer.email, payer.fullname, otpCode, 1),
     ]);
 
     return res.status(201).json({
-      message: "Xác nhận thanh toán. Vui lòng kiểm tra email để lấy mã OTP",
+      message: "Vui lòng kiểm tra email để lấy mã OTP",
       payment,
       success: true,
     });
@@ -73,7 +83,7 @@ const processPayment = async (req, res, next) => {
     const { otpCode, payment } = req.body;
 
     if (!otpCode) throw CreateError.BadRequest("Vui lòng nhập mã OTP");
-    if (!payment) throw CreateError.BadRequest("Payment is required");
+    if (!payment) throw CreateError.BadRequest("Thanh toán phải được cung cấp");
 
     const affectedRows = await PaymentModel.updatePaymentSuccess(
       payment.payment_id,
@@ -88,11 +98,11 @@ const processPayment = async (req, res, next) => {
           {
             userId: payment.payer_id,
             decreaseAmount: payment.amount,
-          }, 
-          {
-            headers:{
-            Authorization: `Bearer ${process.env.SERVICE_TOKEN}`,
           },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.SERVICE_TOKEN}`,
+            },
           }
         );
 
@@ -114,13 +124,13 @@ const processPayment = async (req, res, next) => {
           success: true,
         });
       } catch (err) {
-        const statusCode = err.response?.status || 500
+        const statusCode = err.response?.status || 500;
 
         if (statusCode === 401 || statusCode === 403)
           return res.status(statusCode).json({
-          message: `Phiên đăng nhập đã hết hạn`,
-          success: false,
-        });
+            message: `Phiên đăng nhập đã hết hạn`,
+            success: false,
+          });
 
         const isInsufficientBalance = statusCode === 409;
         const failReason = isInsufficientBalance
@@ -133,9 +143,12 @@ const processPayment = async (req, res, next) => {
           failReason
         );
 
-        console.error(err)
+        console.error(err);
 
-        await publishMessage("payment_failed", JSON.stringify({tuitionId: payment.tuition_id}));
+        await publishMessage(
+          "payment_failed",
+          JSON.stringify({ tuitionId: payment.tuition_id })
+        );
 
         return res.status(statusCode).json({
           message: `Thanh toán không thành công: ${failReason}`,
@@ -144,10 +157,9 @@ const processPayment = async (req, res, next) => {
       }
     }
 
-    // deadlock (MySQL rollback)
-    if (affectedRows === -1) {
+    // deadlock
+    if (affectedRows === -1)
       throw CreateError.Conflict("Thanh toán đang được xử lý bởi yêu cầu khác");
-    }
 
     // OTP invalid
     const otpRecord = await OtpModel.getValidOtpByPaymentId(payment.payment_id);
@@ -160,17 +172,15 @@ const processPayment = async (req, res, next) => {
         "Mã OTP không đúng. Vui lòng kiểm tra lại"
       );
 
-    // check paid tuition
-    const paidTuition = await PaymentModel.checkPaidTiontion(
-      payment.tuition_id
-    );
+    // check học phí thanh toán chưa
+    const paidTuition = await PaymentModel.checkPaidTuition(payment.tuition_id);
     if (paidTuition) {
       await PaymentModel.updateStatus(
         payment.payment_id,
         "FAILED",
-        "Học phí đã được thanh toán bởi yêu cầu khác"
+        "Học phí đã được thanh toán bởi người khác"
       );
-      throw CreateError.Conflict("Học phí đã được thanh toán bởi yêu cầu khác");
+      throw CreateError.Conflict("Học phí đã được thanh toán bởi người khác");
     }
 
     // check payment record
@@ -179,11 +189,10 @@ const processPayment = async (req, res, next) => {
     );
     if (!paymentRecord) throw CreateError.NotFound("Thanh toán không tồn tại");
 
-    if (paymentRecord.status === "FAILED") {
+    if (paymentRecord.status === "FAILED")
       throw CreateError.Conflict("Thanh toán đã bị huỷ");
-    }
 
-    // Trường hợp còn lại: không thỏa điều kiện nào
+    // không thỏa điều kiện nào
     throw CreateError.Conflict("Thanh toán không thể thực hiện");
   } catch (error) {
     next(error);
@@ -208,7 +217,6 @@ const sendOtp = async (req, res, next) => {
 
     return res.status(200).json({
       message: "Đã gửi OTP thành công!",
-      otpCode,
       success: true,
     });
   } catch (error) {

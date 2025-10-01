@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 const PaymentPage = ({ user, onOtpDialogChange }) => {
   const [paymentData, setPaymentData] = useState({
     studentId: "",
-    acceptTerms: false,
+    acceptTerms: JSON.parse(localStorage.getItem("isAgreed")) || false,
   });
   const [studentInfo, setStudentInfo] = useState({
     fullname: "",

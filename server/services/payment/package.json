@@ -8,6 +8,8 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@arcjet/inspect": "^1.0.0-beta.12",
+    "@arcjet/node": "^1.0.0-beta.12",
     "amqplib": "^0.10.9",
     "axios": "^1.12.2",
     "cors": "^2.8.5",
