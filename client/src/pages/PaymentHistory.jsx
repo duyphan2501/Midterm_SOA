@@ -46,9 +46,7 @@ const PaymentHistory = () => {
     };
 
     return (
-      <span
-        className={`px-3 py-1 ${bg} ${text} rounded-full text-sm font-medium`}
-      >
+      <span className={`p-2 ${bg} ${text} rounded-full text-sm font-medium`}>
         {label}
       </span>
     );
@@ -100,47 +98,51 @@ const PaymentHistory = () => {
             paymentHistory.map((payment) => (
               <div
                 key={payment.payment_code}
-                className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
+                className="bg-white border border-gray-200 rounded-xl p-3  md:p-6 shadow-sm"
               >
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800">
                       Học phí {payment.semester}
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className=" text-gray-600 text-[17px]">
                       Mã GD: {payment.payment_code}
                     </p>
                   </div>
-                  {handleStatus(payment.status)}
+                  <div className="text-nowrap">
+                    {handleStatus(payment.status)}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-2 ">
                   <div>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-[17px]">
                       {payment.status !== "SUCCESS"
                         ? "Cập nhật lúc"
                         : "Thanh toán lúc:"}
                     </p>
-                    <p className="font-medium">
+                    <p className="font-medium text-lg">
                       {formatDate(payment.updated_at)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Mã sinh viên:</p>
-                    <p className="font-medium">{payment.student_id}</p>
+                    <p className="text-gray-600 text-[17px]">Mã sinh viên:</p>
+                    <p className="font-medium text-lg">{payment.student_id}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Tên sinh viên:</p>
-                    <p className="font-medium">{payment.student_name}</p>
+                    <p className="text-gray-600 text-[17px]">Tên sinh viên:</p>
+                    <p className="font-medium text-lg">
+                      {payment.student_name}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-[17px]">
                       {payment.status === "SUCCESS"
                         ? "Đã thanh toán"
                         : "Cần thanh toán:"}
                     </p>
                     <p
-                      className={`font-medium ${
+                      className={`font-medium text-lg ${
                         statusMap[payment.status].text
                       }`}
                     >
@@ -150,8 +152,10 @@ const PaymentHistory = () => {
                 </div>
 
                 {payment.description && (
-                  <div className="mt-4">
-                    <span className="font-semibold text-black">Ghi chú: </span>
+                  <div className="mt-3 text-lg">
+                    <span className="font-semibold text-black text-[17px]">
+                      Ghi chú:{" "}
+                    </span>
                     {payment.description}
                   </div>
                 )}

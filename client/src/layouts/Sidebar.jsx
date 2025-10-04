@@ -88,7 +88,7 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
         }}
       >
         <Typography
-          variant="subtitle2"
+          variant="subtitle1"
           fontWeight="600"
           color="primary.main"
           gutterBottom
@@ -97,28 +97,28 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Person sx={{ fontSize: 16, color: "primary.main", mr: 1 }} />
-            <Typography variant="body2" color="text.primary">
+            <Person sx={{ fontSize: 18, color: "primary.main", mr: 1 }} />
+            <Typography variant="body1" color="text.primary">
               {user.fullname}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Phone sx={{ fontSize: 16, color: "primary.main", mr: 1 }} />
-            <Typography variant="body2" color="text.primary">
+            <Phone sx={{ fontSize: 18, color: "primary.main", mr: 1 }} />
+            <Typography variant="body1" color="text.primary">
               {user.phone}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Email sx={{ fontSize: 16, color: "primary.main", mr: 1 }} />
-            <Typography variant="body2" color="text.primary">
+            <Email sx={{ fontSize: 18, color: "primary.main", mr: 1 }} />
+            <Typography variant="body1" color="text.primary">
               {user.email}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <AccountBalanceWallet
-              sx={{ fontSize: 16, color: "success.main", mr: 1 }}
+              sx={{ fontSize: 18, color: "success.main", mr: 1 }}
             />
-            <Typography variant="body2" fontWeight="600" color="success.main">
+            <Typography variant="body1" fontWeight="600" color="success.main">
               {user.balance.toLocaleString()} VNĐ
             </Typography>
           </Box>
@@ -180,7 +180,7 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
               <ListItemIcon sx={{ minWidth: 40 }}>
                 <History />
               </ListItemIcon>
-              <ListItemText primary="Lịch sử thanh toán" />
+              <ListItemText primary="Lịch sử thanh toán"/>
             </ListItemButton>
           </ListItem>
         </List>

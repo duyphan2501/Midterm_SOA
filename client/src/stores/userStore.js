@@ -1,47 +1,45 @@
 import { create } from "zustand";
 import { toast } from "react-toastify";
-import axios from "axios";
 import API from "../API/api.js";
-
-axios.defaults.withCredentials = true;
-const API_URL = import.meta.env.VITE_GATEWAY_API_URL || "http://localhost:3000";
 
 const useUserStore = create((set) => ({
   user: null,
   isLogin: false,
-  setUser: (newUser) => set({ user: newUser}),
-  clearUser: () => set({ user: null}),
+
+  setUser: (newUser) => set({ user: newUser }),
+  clearUser: () => set({ user: null }),
+
   login: async (username, password) => {
     set({ isLogin: true });
     try {
-      const url = `${API_URL}/api/users/login`;
-      const res = await axios.post(url, { username, password });
-      set({ user: res.data.user });
-      localStorage.setItem("accessToken", res.data.accessToken);
-      toast.success(res.data.message || "Login successfully");
+      const res = await API.post("/users/login", { username, password });
+      set({ user: res.data.user }); 
+      toast.success(res.data.message || "Đăng nhập thành công");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
+      toast.error(error.response?.data?.message || "Đăng nhập thất bại");
       console.error("Login error:", error);
     } finally {
       set({ isLogin: false });
     }
   },
-  logout: () => {
+
+  logout: async () => {
+    try {
+      await API.delete("/users/logout"); 
+    } catch (err) {
+      console.error(err);
+    }
     set({ user: null });
-    localStorage.removeItem("accessToken");
     toast.info("Đã đăng xuất");
   },
+
   refreshUser: async () => {
     try {
-      const url = `${API_URL}/api/users/refresh`;
-      const res = await API.get(url, {
-        headers: {  
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const res = await API.get("/users/refresh"); 
       set({ user: res.data.user });
     } catch (error) {
-      localStorage.removeItem("accessToken");
+      set({ user: null });
+      console.error(error);
     }
   },
 }));

@@ -4,6 +4,7 @@ import useUserStore from "../stores/userStore.js";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
+  withCredentials: true, 
 });
 
 let isLoggingOut = false;
@@ -14,8 +15,7 @@ API.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
       const message = data?.message || "";
-      console.log(message);
-      console.log(message.toLowerCase().includes("token"));
+
       if (
         (status === 401 || status === 403) &&
         message.toLowerCase().includes("token") &&
@@ -23,7 +23,6 @@ API.interceptors.response.use(
       ) {
         isLoggingOut = true;
 
-        localStorage.removeItem("accessToken");
         const { clearUser } = useUserStore.getState();
         clearUser();
 

@@ -37,7 +37,7 @@ function App() {
         rtl={false}
         pauseOnFocusLoss
         draggable
-        pauseOnHover
+        pauseOnHover={true}
         theme="light"
         transition={Bounce}
       />

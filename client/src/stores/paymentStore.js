@@ -1,29 +1,20 @@
 import { create } from "zustand";
 import API from "../API/api.js";
 import { toast } from "react-toastify";
-const API_URL = import.meta.env.VITE_GATEWAY_API_URL || "http://localhost:3000";
 
 const usePaymentStore = create((set) => ({
   isProcessing: false,
   isSending: false,
   payment: null,
+
   createPayment: async (tuition, payer) => {
     set({ isProcessing: true });
     try {
-      const url = `${API_URL}/api/payments/create`;
-      const res = await API.post(
-        url,
-        { tuition, payer },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
+      const res = await API.post("/payments/create", { tuition, payer });
       set({ payment: res.data.payment });
-      toast.info(res.data.message)
+      toast.info(res.data.message);
     } catch (error) {
-      if (error.response.status !== 401 && error.response.status !== 403) {
+      if (error.response?.status !== 401 && error.response?.status !== 403) {
         toast.error(error.response?.data?.message || "Create payment failed");
         console.error("Create payment error:", error);
       }
@@ -35,22 +26,14 @@ const usePaymentStore = create((set) => ({
   processPayment: async (otpCode, payment) => {
     set({ isProcessing: true });
     try {
-      const url = `${API_URL}/api/payments/process`;
-      const res = await API.put(
-        url,
-        { otpCode, payment },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
+      const res = await API.put("/payments/process", { otpCode, payment });
       toast.success(res.data.message || "Payment successful");
       set({ payment: null });
       return res.data.payer;
     } catch (error) {
-      if (error.response.status !== 401 || error.response.status !== 403) {
-        toast.error(error.response?.data?.message || "Payment failed");
+      const message = error.response?.data?.message || "";
+      if (!message.toLowerCase().includes("token")) {
+        toast.error(message);
         console.error("Process payment error:", error);
       }
       return false;
@@ -58,18 +41,14 @@ const usePaymentStore = create((set) => ({
       set({ isProcessing: false });
     }
   },
+
   getPaymentHistory: async (payerId) => {
     set({ isProcessing: true });
     try {
-      const url = `${API_URL}/api/payments/history/${payerId}`;
-      const res = await API.get(url, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const res = await API.get(`/payments/history/${payerId}`);
       return res.data.payments;
     } catch (error) {
-      if (error.response.status !== 401 && error.response.status !== 403) {
+      if (error.response?.status !== 401 && error.response?.status !== 403) {
         toast.error(error.response?.data?.message || "Payment failed");
         console.error("Load payment history error", error);
       }
@@ -81,19 +60,10 @@ const usePaymentStore = create((set) => ({
   sendOtp: async (payer, paymentId) => {
     set({ isSending: true });
     try {
-      const url = `${API_URL}/api/payments/otp/send`;
-      const res = await API.put(
-        url,
-        { payer, paymentId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
-      toast.success(res.data.message || "Gửi OTP thành công")
+      const res = await API.put("/payments/otp/send", { payer, paymentId });
+      toast.success(res.data.message || "Gửi OTP thành công");
     } catch (error) {
-      if (error.response.status !== 401 && error.response.status !== 403) {
+      if (error.response?.status !== 401 && error.response?.status !== 403) {
         toast.error(error.response?.data?.message || "Send otp failed");
         console.error("Send otp error", error);
       }

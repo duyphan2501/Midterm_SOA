@@ -13,10 +13,16 @@ const login = async (req, res, next) => {
     if (!user) throw CreateError.NotFound("Tài khoản không tồn tại");
 
     const isCorrectPassword = password === user.password;
+    if (!isCorrectPassword) throw CreateError.Forbidden("Mật khẩu không đúng");
 
-    if (!isCorrectPassword) throw CreateError.Forbidden("Mât khẩu không đúng");
- 
     const accessToken = await signToken({ userId: user.user_id });
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,       
+      secure: false,         
+      sameSite: "lax",       
+      maxAge: 15 * 60 * 1000, 
+    });
 
     return res.status(200).json({
       message: "Đăng nhập thành công",
@@ -25,7 +31,6 @@ const login = async (req, res, next) => {
         ...user,
         password: undefined,
       },
-      accessToken,
     });
   } catch (error) {
     next(error);
@@ -61,6 +66,8 @@ const refreshUser = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     if (!userId) throw CreateError.Unauthorized();
+    const requesterId = req.user.userId;
+
     const user = await UserModel.findUserById(userId);
     if (!user) throw CreateError.NotFound("Người dùng không tồn tại");
     return res.status(200).json({
@@ -76,4 +83,24 @@ const refreshUser = async (req, res, next) => {
   }
 }
 
-export { login, decreaseBalance, refreshUser };
+const logout = async (req, res, next) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) throw CreateError.Unauthorized("Bạn chưa đăng nhập");
+
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: false,      
+      sameSite: "lax",
+    });
+
+    return res.status(200).json({
+      message: "Đăng xuất thành công",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { login, decreaseBalance, refreshUser, logout };

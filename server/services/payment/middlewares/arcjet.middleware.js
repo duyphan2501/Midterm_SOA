@@ -11,14 +11,14 @@ const otpLimiter = async (req, res, next) => {
         return res.status(429).json({
           message: "Gửi quá nhiều yêu cầu. Vui lòng thử lại sau.",
         });
-      else if (decision.reason.isBot())
-        return res.status(403).json({
-          message: "Bot access denied",
-        });
-      else
-        return res.status(403).json({
-          message: "Từ chối truy cập vì lí do bảo mật.",
-        });
+      // else if (decision.reason.isBot())
+      //   return res.status(403).json({
+      //     message: "Bot access denied",
+      //   });
+      // else
+      //   return res.status(403).json({
+      //     message: "Từ chối truy cập vì lí do bảo mật.",
+      //   });
     }
 
     if (decision.results.some(isSpoofedBot))

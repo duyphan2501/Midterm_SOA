@@ -42,13 +42,11 @@ const createPayment = async (req, res, next) => {
         tuition.amount
       );
       payment = await PaymentModel.findPaymentById(newPaymentId);
-      console.log(payment);
     } else {
       // nếu otp còn hiệu lực thì ko gửi otp lại
       const existingOtp = await OtpModel.getValidOtpByPaymentId(
         payment.payment_id
       );
-      console.log(existingOtp);
       if (existingOtp)
         return res.status(200).json({
           message: "Vui lòng nhập mã OTP đã được gửi.",
@@ -65,7 +63,7 @@ const createPayment = async (req, res, next) => {
 
     await Promise.all([
       OtpModel.create(payment.payment_id, otpCode, otpExpireAt),
-      sendOtpCode(payer.email, payer.fullname, otpCode, 1),
+      // sendOtpCode(payer.email, payer.fullname, otpCode, 1),
     ]);
 
     return res.status(201).json({
@@ -125,7 +123,7 @@ const processPayment = async (req, res, next) => {
         });
       } catch (err) {
         const statusCode = err.response?.status || 500;
-
+        console.log(statusCode)
         if (statusCode === 401 || statusCode === 403)
           return res.status(statusCode).json({
             message: `Phiên đăng nhập đã hết hạn`,
@@ -207,11 +205,16 @@ const sendOtp = async (req, res, next) => {
 
     if (!paymentId) throw CreateError.BadRequest("Mã thanh toán không tồn tại");
 
+    const isPaid = await PaymentModel.checkSuccessPayment(paymentId)
+
+    if (isPaid)
+      throw CreateError.Conflict("Học phí đã được thanh toán")
+
     await OtpModel.disableValidOtpByPaymentId(paymentId);
 
     const { otpCode, otpExpireAt } = await generateNewOtpCode(paymentId, 1);
 
-    await sendOtpCode(payer.email, payer.fullname, otpCode, 1);
+    // await sendOtpCode(payer.email, payer.fullname, otpCode, 1);
 
     await OtpModel.create(paymentId, otpCode, otpExpireAt);
 

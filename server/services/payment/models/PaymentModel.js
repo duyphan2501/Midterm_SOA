@@ -22,7 +22,7 @@ const create = async (paymentCode, tuitionId, payerId, amount) => {
 };
 
 const findPaymentById = async (paymentId) => {
-  const query = `SELECT * FROM payments WHERE payment_id = ? LIMIT 1`;
+  const query = `SELECT payment_id, payment_code, tuition_id, payer_id, status, amount, description FROM payments WHERE payment_id = ? LIMIT 1`;
   const [rows] = await pool.query(query, [paymentId]);
   return rows.length > 0 ? rows[0] : null;
 };
@@ -65,7 +65,7 @@ const updateStatus = async (paymentId, status, description = null) => {
   const params = [status];
 
   if (description) {
-    query += `, description = ?`; 
+    query += `, description = ?`;
     params.push(description);
   }
 
@@ -76,17 +76,23 @@ const updateStatus = async (paymentId, status, description = null) => {
   return result.affectedRows;
 };
 
-const getDuplicatePayment = async(tuitionId, payerId, status) => {
-  const query = `SELECT * FROM payments where tuition_id = ? AND payer_id = ? AND status = ? LIMIT 1`;
-  const [rows] = await pool.query(query, [tuitionId, payerId, status])
-  return rows.length > 0 ? rows[0]: null;
-}
+const getDuplicatePayment = async (tuitionId, payerId, status) => {
+  const query = `SELECT payment_id, payment_code, tuition_id, payer_id, status, amount, description FROM payments where tuition_id = ? AND payer_id = ? AND status = ? LIMIT 1`;
+  const [rows] = await pool.query(query, [tuitionId, payerId, status]);
+  return rows.length > 0 ? rows[0] : null;
+};
 
 const getPaymentHistoryByPayerId = async (payerId) => {
   const query = `SELECT payment_code, tuition_id, updated_at, description, amount, status FROM payments where payer_id = ? AND status != ? ORDER BY updated_at DESC`;
-  const [rows] = await pool.query(query, [payerId, "PENDING"])
-  return rows.length > 0 ? rows: [];
-}
+  const [rows] = await pool.query(query, [payerId, "PENDING"]);
+  return rows.length > 0 ? rows : [];
+};
+
+const checkSuccessPayment = async (payment_id) => {
+  const query = `SELECT 1 FROM payments WHERE payment_id = ? AND status = ? LIMIT 1`;
+  const [rows] = await pool.query(query, [payment_id, "SUCCESS"]);
+  return rows.length > 0;
+};
 
 const PaymentModel = {
   checkPaidTuition,
@@ -95,7 +101,8 @@ const PaymentModel = {
   updatePaymentSuccess,
   updateStatus,
   getDuplicatePayment,
-  getPaymentHistoryByPayerId
+  getPaymentHistoryByPayerId,
+  checkSuccessPayment,
 };
 
 export default PaymentModel;
