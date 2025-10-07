@@ -20,7 +20,7 @@ const createPayment = async (req, res, next) => {
       throw CreateError.BadRequest("Học phí và người trả phải được cung cấp");
 
     if (payer.balance < tuition.amount)
-      throw CreateError.BadRequest("Số dư không đủ để thanh toán");
+      throw CreateError.Conflict("Số dư không đủ để thanh toán");
 
     const paidTuition = await PaymentModel.checkPaidTuition(tuition.tuition_id);
     if (paidTuition) throw CreateError.Conflict("Học phí đã được thanh toán");
@@ -63,7 +63,7 @@ const createPayment = async (req, res, next) => {
 
     await Promise.all([
       OtpModel.create(payment.payment_id, otpCode, otpExpireAt),
-      // sendOtpCode(payer.email, payer.fullname, otpCode, 1),
+      sendOtpCode(payer.email, payer.fullname, otpCode, 1),
     ]);
 
     return res.status(201).json({
@@ -201,9 +201,9 @@ const sendOtp = async (req, res, next) => {
   try {
     const { payer, paymentId } = req.body;
 
-    if (!payer) throw CreateError.BadRequest("Người nhận không tồn tại");
+    if (!payer) throw CreateError.BadRequest("Thiếu mã người thanh toán");
 
-    if (!paymentId) throw CreateError.BadRequest("Mã thanh toán không tồn tại");
+    if (!paymentId) throw CreateError.BadRequest("Thiếu mã thanh toán");
 
     const isPaid = await PaymentModel.checkSuccessPayment(paymentId)
 
@@ -214,7 +214,7 @@ const sendOtp = async (req, res, next) => {
 
     const { otpCode, otpExpireAt } = await generateNewOtpCode(paymentId, 1);
 
-    // await sendOtpCode(payer.email, payer.fullname, otpCode, 1);
+    await sendOtpCode(payer.email, payer.fullname, otpCode, 1);
 
     await OtpModel.create(paymentId, otpCode, otpExpireAt);
 

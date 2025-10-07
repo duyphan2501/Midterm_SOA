@@ -151,7 +151,6 @@ const PaymentPage = ({ user, onOtpDialogChange }) => {
         clearPaymentData={() =>
           setPaymentData({
             studentId: "",
-            acceptTerms: false,
           })
         }
       />

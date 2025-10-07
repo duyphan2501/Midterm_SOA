@@ -19,25 +19,23 @@ const getUnPaidTuitionFee = async (req, res, next) => {
   }
 };
 
-
-const getTuitionInfo = async (req, res,next) => {
+const getTuitionInfo = async (req, res, next) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
 
-    if (!id) throw CreateError.BadRequest("Thiếu mã học phí")
+    if (!id) throw CreateError.BadRequest("Thiếu mã học phí");
 
-    const tuition = await TuitionModel.getTuiTionById(id)
+    const tuition = await TuitionModel.getTuiTionById(id);
 
-    if (!tuition) throw CreateError.NotFound("Học phí không tồn tại")
+    if (!tuition) throw CreateError.NotFound("Học phí không tồn tại");
 
     return res.status(200).json({
       tuition,
-      success: true
-    })
+      success: true,
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-  
-}
+};
 
 export { getUnPaidTuitionFee, getTuitionInfo };

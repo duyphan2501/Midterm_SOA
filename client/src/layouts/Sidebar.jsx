@@ -26,6 +26,8 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import useUserStore from "../stores/userStore";
+import { useState } from "react";
+import { Asterisk, Eye, EyeOff } from "lucide-react";
 
 const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
   if (!user) return null;
@@ -34,6 +36,7 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
   const drawerWidth = 320;
 
   const logout = useUserStore((state) => state.logout);
+  const [showBalance, setShowBalance] = useState(false);
 
   const onLogout = () => {
     logout();
@@ -119,8 +122,26 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
               sx={{ fontSize: 18, color: "success.main", mr: 1 }}
             />
             <Typography variant="body1" fontWeight="600" color="success.main">
-              {user.balance.toLocaleString()} VNĐ
+              {showBalance ? (
+                user.balance.toLocaleString() + " VNĐ"
+              ) : (
+                <div className="flex gap-[-1px]">
+                  {Array.from({ length: 8 }).map((item, index) => (
+                    <Asterisk strokeWidth={3} size={13} />
+                  ))}
+                </div>
+              )}
             </Typography>
+            <div
+              className="ml-2"
+              onClick={() => setShowBalance((prev) => !prev)}
+            >
+              {showBalance ? (
+                <EyeOff className="text-[#31773a] cursor-pointer" />
+              ) : (
+                <Eye className="text-[#31773a] cursor-pointer" />
+              )}
+            </div>
           </Box>
         </Box>
       </Box>
@@ -180,7 +201,7 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
               <ListItemIcon sx={{ minWidth: 40 }}>
                 <History />
               </ListItemIcon>
-              <ListItemText primary="Lịch sử thanh toán"/>
+              <ListItemText primary="Lịch sử thanh toán" />
             </ListItemButton>
           </ListItem>
         </List>
