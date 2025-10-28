@@ -10,7 +10,7 @@ const usePaymentStore = create((set) => ({
   createPayment: async (tuition, payer) => {
     set({ isProcessing: true });
     try {
-      const res = await API.post("/payments/create", { tuition, payer });
+      const res = await API.post("/api/payments/create", { tuition, payer });
       set({ payment: res.data.payment });
       toast.info(res.data.message);
     } catch (error) {
@@ -26,17 +26,17 @@ const usePaymentStore = create((set) => ({
   processPayment: async (otpCode, payment) => {
     set({ isProcessing: true });
     try {
-      const res = await API.put("/payments/process", { otpCode, payment });
+      const res = await API.put("/api/payments/process", { otpCode, payment });
       toast.success(res.data.message || "Payment successful");
       set({ payment: null });
-      return res.data.payer;
+      return {user: res.data.payer, status: res.status};
     } catch (error) {
       const message = error.response?.data?.message || "";
       if (!message.toLowerCase().includes("token")) {
         toast.error(message);
         console.error("Process payment error:", error);
       }
-      return false;
+      return {user: error.response.data.payer || null, status: error.response.status || 500};
     } finally {
       set({ isProcessing: false });
     }
@@ -45,7 +45,7 @@ const usePaymentStore = create((set) => ({
   getPaymentHistory: async (payerId) => {
     set({ isProcessing: true });
     try {
-      const res = await API.get(`/payments/history/${payerId}`);
+      const res = await API.get(`/api/payments/history/${payerId}`);
       return res.data.payments;
     } catch (error) {
       if (error.response?.status !== 401 && error.response?.status !== 403) {
@@ -60,13 +60,15 @@ const usePaymentStore = create((set) => ({
   sendOtp: async (payer, paymentId) => {
     set({ isSending: true });
     try {
-      const res = await API.put("/payments/otp/send", { payer, paymentId });
+      const res = await API.put("/api/payments/otp/send", { payer, paymentId });
       toast.success(res.data.message || "Gửi OTP thành công");
+      return res.status;
     } catch (error) {
       if (error.response?.status !== 401 && error.response?.status !== 403) {
         toast.error(error.response?.data?.message || "Send otp failed");
         console.error("Send otp error", error);
       }
+      return error.response?.status || 500;
     } finally {
       set({ isSending: false });
     }

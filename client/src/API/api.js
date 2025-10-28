@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import useUserStore from "../stores/userStore.js";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_GATEWAY_API_URL || "http://localhost:3000",
   withCredentials: true, 
 });
 

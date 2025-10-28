@@ -12,7 +12,7 @@ const useUserStore = create((set) => ({
   login: async (username, password) => {
     set({ isLogin: true });
     try {
-      const res = await API.post("/users/login", { username, password });
+      const res = await API.post("/api/users/login", { username, password });
       set({ user: res.data.user }); 
       toast.success(res.data.message || "Đăng nhập thành công");
     } catch (error) {
@@ -25,7 +25,7 @@ const useUserStore = create((set) => ({
 
   logout: async () => {
     try {
-      await API.delete("/users/logout"); 
+      await API.delete("/api/users/logout"); 
     } catch (err) {
       console.error(err);
     }
@@ -35,7 +35,7 @@ const useUserStore = create((set) => ({
 
   refreshUser: async () => {
     try {
-      const res = await API.get("/users/refresh"); 
+      const res = await API.get("/api/users/refresh"); 
       set({ user: res.data.user });
     } catch (error) {
       set({ user: null });

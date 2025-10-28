@@ -48,7 +48,7 @@ const updatePaymentSuccess = async (paymentId, otpCode) => {
         AND p2.payment_id IS NULL
     `,
       [paymentId, otpCode]
-    );
+    );          
 
     return result.affectedRows;
   } catch (err) {

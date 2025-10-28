@@ -4,6 +4,7 @@ const req1 = () =>
   axios.put("http://localhost:3000/api/payments/process", {
     otpCode: "111111",
     payment: {
+      payment_code: "HP52300034HK120242025_12DX",
       payment_id: 3,
       tuition_id: 2,
       payer_id: 1,
@@ -15,6 +16,7 @@ const req2 = () =>
   axios.put("http://localhost:3000/api/payments/process", {
     otpCode: "222222",
     payment: {
+      payment_code: "HP52300034HK120242025_13DX",
       payment_id: 4,
       tuition_id: 2,
       payer_id: 2,

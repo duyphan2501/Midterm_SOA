@@ -15,6 +15,7 @@ const OTPScreen = ({ isOpen, onClose, clearPaymentData }) => {
   const sendOtp = usePaymentStore((state) => state.sendOtp);
   const isSending = usePaymentStore((state) => state.isSending);
   const user = useUserStore((state) => state.user);
+
   const handleClose = () => {
     setOtpCode("");
     onClose();
@@ -22,15 +23,24 @@ const OTPScreen = ({ isOpen, onClose, clearPaymentData }) => {
 
   const sendOtpAgain = async () => {
     if (isSending) return;
-    await sendOtp(user, payment.payment_id);
+    const status = await sendOtp(user, payment.payment_id);
+    if (status === 409 || status === 500) {
+      handleClose();
+      clearPaymentData();
+    }
   };
 
   const handleSubmit = async () => {
-    const user = await processPayment(otpCode, payment);
-    if (user) {
+    const { user, status } = await processPayment(otpCode, payment);
+    console.log(user, status);
+    if (status === 409 || status === 404 || status === 500) {
       handleClose();
       clearPaymentData();
+    }
+    if (user) {
       setUser(user);
+      handleClose();
+      clearPaymentData();
     }
   };
 
@@ -90,7 +100,7 @@ const OTPScreen = ({ isOpen, onClose, clearPaymentData }) => {
         <div className="text-white py-2 bg-black w-96 flex gap-2 items-center justify-center text-sm">
           <p>Không nhận được mã? </p>
           {isSending ? (
-            <Loader className="animate-spin" size={17}/>
+            <Loader className="animate-spin" size={17} />
           ) : (
             <button className="underline cursor-pointer" onClick={sendOtpAgain}>
               Gửi lại mã OTP

@@ -62,9 +62,9 @@ const PaymentHistory = () => {
           const tuition = await getTuitionInfo(payment.tuition_id);
           return {
             ...payment,
-            semester: tuition.semester,
-            student_id: tuition.student_id,
-            student_name: tuition.student_name,
+            semester: tuition?.semester,
+            student_id: tuition?.student_id,
+            student_name: tuition?.student_name,
           };
         })
       );
@@ -172,7 +172,7 @@ const PaymentHistory = () => {
                 className="size-60 object-cover"
               />
               <div className="text-lg font-semibold">
-                Hiện tại chưa có giao dịch nào
+                Không tìm thấy giao dịch nào
               </div>
             </div>
           )}

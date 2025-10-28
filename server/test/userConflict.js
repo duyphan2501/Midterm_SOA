@@ -4,6 +4,7 @@ const req1 = () =>
   axios.put("http://localhost:3000/api/payments/process", {
     otpCode: "123456",
     payment: {
+      payment_code: "HP52300056HKHE20242025",
       payment_id: 1,
       tuition_id: 3,
       payer_id: 1,
@@ -15,13 +16,13 @@ const req2 = () =>
   axios.put("http://localhost:3000/api/payments/process", {
     otpCode: "654321",
     payment: {
+      payment_code: "HP52300090HK120242025",
       payment_id: 2,
       tuition_id: 5,
       payer_id: 1,
       amount: 5500000,
     },
   });
-
 
 const test = async () => {
   const results = await Promise.allSettled([

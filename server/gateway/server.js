@@ -6,7 +6,17 @@ import dotenv from "dotenv";
 
 dotenv.config({ quiet: true });
 const app = express();
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://192.168.1.101:5173",
+      "http://192.168.1.102:5173",
+      "http://192.168.1.103:5173",
+    ],
+    credentials: true,
+  })
+);
 app.use(morgan("tiny"));
 
 const PORT = process.env.GATEWAY_PORT || 8000;
@@ -15,7 +25,7 @@ const TUITIONS_TARGET = process.env.TUITIONS_URL || "http://localhost:8002";
 const PAYMENTS_TARGET = process.env.PAYMENTS_URL || "http://localhost:8003";
 
 app.get("/health", (_, res) => res.json({ ok: true, service: "gateway" }));
-
+  
 app.use(
   "/api/users",
   createProxyMiddleware({

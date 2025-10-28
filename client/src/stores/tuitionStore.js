@@ -11,7 +11,7 @@ const useTuitionStore = create((set) => ({
   fetchTuition: async (studentId) => {
     set({ isLoading: true, message: null, success: false });
     try {
-      const res = await API.get(`/tuitions/get/unpaid/${studentId}`);
+      const res = await API.get(`/api/tuitions/get/unpaid/${studentId}`);
       set({
         message: res.data.message,
         success: true,
@@ -32,7 +32,7 @@ const useTuitionStore = create((set) => ({
 
   getTuitionInfo: async (tuitionId) => {
     try {
-      const res = await API.get(`/tuitions/get/${tuitionId}`);
+      const res = await API.get(`/api/tuitions/get/${tuitionId}`);
       return res.data.tuition;
     } catch (error) {
       if (error.response?.status !== 401 && error.response?.status !== 403) {

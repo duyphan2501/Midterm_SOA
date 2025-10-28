@@ -42,19 +42,25 @@ const decreaseBalance = async (req, res, next) => {
     const { userId, decreaseAmount } = req.body;
     if (!userId || !decreaseAmount)
       throw CreateError.BadRequest("Mã người dùng và số tiền trừ phải được cung cấp");
-    
-    const affectedRows = await UserModel.decreaseBalance(
-      decreaseAmount,
-      userId
-    );
-    if (affectedRows === 0)
-      throw CreateError.Conflict("Số dư không đủ để thanh toán");
 
-    const user = await UserModel.findUserById(userId)
+    const user = await UserModel.findUserById(userId);
+    if (!user) throw CreateError.NotFound("Người dùng không tồn tại");
+
+    const affectedRows = await UserModel.decreaseBalance(decreaseAmount, userId);
+
+    if (affectedRows === 0) {
+      return res.status(409).json({
+        message: "Trừ số dư thất bại: Số dư không đủ",
+        user,
+        success: false,
+      });
+    }
+
+    const updatedUser = await UserModel.findUserById(userId);
 
     return res.status(200).json({
       message: "Trừ số dư thành công",
-      user,
+      user: updatedUser,
       success: true,
     });
   } catch (error) {
@@ -62,11 +68,11 @@ const decreaseBalance = async (req, res, next) => {
   }
 };
 
+
 const refreshUser = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     if (!userId) throw CreateError.Unauthorized();
-    const requesterId = req.user.userId;
 
     const user = await UserModel.findUserById(userId);
     if (!user) throw CreateError.NotFound("Người dùng không tồn tại");

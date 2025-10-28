@@ -4,15 +4,15 @@ const OtpBox = ({ length, onChangeOtp, onSubmit }) => {
   const [otp, setOtp] = useState(Array(length).fill(""));
   const inputsOtp = useRef([]);
 
-  useEffect(() => {
-    inputsOtp.current = inputsOtp.current.slice(0, length);
-  }, [length]);
+  // useEffect(() => {
+  //   inputsOtp.current = inputsOtp.current.slice(0, length);
+  // }, [length]);
 
-  useEffect(() => {
-    if (otp.every((digit) => digit !== "")) {
-      onSubmit(); // Gọi khi đã điền đủ OTP
-    }
-  }, [otp]);
+  // useEffect(() => {
+  //   if (otp.every((digit) => digit !== "")) {
+  //     onSubmit(); // Gọi khi đã điền đủ OTP
+  //   }
+  // }, [otp]);
 
   const handleChange = (e, index) => {
     // handle input

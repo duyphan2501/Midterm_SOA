@@ -1,0 +1,218 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "5173:80"
+    networks:
+      - midnodejs
+    configs:
+      - source: my_nginx_config
+        target: /etc/nginx/nginx.conf
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+
+  mysqldb:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    configs:
+      - source: init_db_sql
+        target: /docker-entrypoint-initdb.d/init.sql
+    networks:
+      - midnodejs
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.7"
+          memory: 1.5G
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - midnodejs
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+
+  users:
+    image: duyphan020/midnodejs-users:v1
+    networks:
+      - midnodejs
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: ${USERS_PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+      MYSQL_DB_HOST: mysqldb
+      MYSQL_DB_USER: ${MYSQL_DB_USER}
+      MYSQL_DB_PASS: ${MYSQL_DB_PASS}
+      MYSQL_DB_NAME: ${MYSQL_USERDB_NAME}
+      MYSQL_DB_PORT: ${MYSQL_DB_PORT}
+    entrypoint: >
+      sh -c "
+      until nc -z mysqldb 3306; do echo 'Waiting MySQL...'; sleep 2; done &&
+      npm start
+      "
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  tuitions:
+    image: duyphan020/midnodejs-tuitions:v1
+    networks:
+      - midnodejs
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: ${TUITIONS_PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+      AMQP_URL_DOCKER: amqp://admin:admin@rabbitmq:5672
+      MYSQL_DB_HOST: mysqldb
+      MYSQL_DB_USER: ${MYSQL_DB_USER}
+      MYSQL_DB_PASS: ${MYSQL_DB_PASS}
+      MYSQL_DB_NAME: ${MYSQL_TUITIONDB_NAME}
+      MYSQL_DB_PORT: ${MYSQL_DB_PORT}
+    entrypoint: >
+      sh -c "
+      until nc -z mysqldb 3306; do echo 'Waiting MySQL...'; sleep 2; done &&
+      until nc -z rabbitmq 5672; do echo 'Waiting RabbitMQ...'; sleep 2; done &&
+      npm start
+      "
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  payments:
+    image: duyphan020/midnodejs-payments:v1
+    networks:
+      - midnodejs
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: ${PAYMENTS_PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+      AMQP_URL_DOCKER: amqp://admin:admin@rabbitmq:5672
+      MYSQL_DB_HOST: mysqldb
+      MYSQL_DB_USER: ${MYSQL_DB_USER}
+      MYSQL_DB_PASS: ${MYSQL_DB_PASS}
+      MYSQL_DB_NAME: ${MYSQL_PAYMENTDB_NAME}
+      MYSQL_DB_PORT: ${MYSQL_DB_PORT}
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_APP_PASSWORD: ${EMAIL_APP_PASSWORD}
+      USER_SERVICE_HOST: http://users:${USERS_PORT}
+      ARCJET_ENV: ${ARCJET_ENV}
+      ARCJET_KEY: ${ARCJET_KEY}
+    entrypoint: >
+      sh -c "
+      until nc -z mysqldb 3306; do echo 'Waiting MySQL...'; sleep 2; done &&
+      until nc -z rabbitmq 5672; do echo 'Waiting RabbitMQ...'; sleep 2; done &&
+      npm start
+      "
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+  gateway:
+    image: duyphan020/midnodejs-gateway:v1
+    networks:
+      - midnodejs
+    ports:
+      - "3000:3000"
+    environment:
+      GATEWAY_PORT: ${GATEWAY_PORT}
+      USERS_URL: http://users:${USERS_PORT}
+      TUITIONS_URL: http://tuitions:${TUITIONS_PORT}
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
+    entrypoint: >
+      sh -c "
+      until nc -z users ${USERS_PORT}; do echo 'Waiting Users service...'; sleep 2; done &&
+      until nc -z tuitions ${TUITIONS_PORT}; do echo 'Waiting Tuitions service...'; sleep 2; done &&
+      until nc -z payments ${PAYMENTS_PORT}; do echo 'Waiting Payments service...'; sleep 2; done &&
+      node server.js
+      "
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  client:
+    image: duyphan020/midnodejs-client:v1
+    networks:
+      - midnodejs
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+networks:
+  midnodejs:
+    driver: overlay     
+
+volumes:
+  mysql_data:
+
+configs:
+  init_db_sql:
+    external: true
+  my_nginx_config:
+    external: true

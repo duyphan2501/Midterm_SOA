@@ -37,7 +37,7 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
 
   const logout = useUserStore((state) => state.logout);
   const [showBalance, setShowBalance] = useState(false);
-
+  
   const onLogout = () => {
     logout();
     onPageChange("login");
@@ -121,13 +121,13 @@ const Sidebar = ({ user, currentPage, onPageChange, open, onToggle }) => {
             <AccountBalanceWallet
               sx={{ fontSize: 18, color: "success.main", mr: 1 }}
             />
-            <Typography variant="body1" fontWeight="600" color="success.main">
+            <Typography variant="body1" fontWeight="600" color="success.main" component="div">
               {showBalance ? (
                 user.balance.toLocaleString() + " VNĐ"
               ) : (
                 <div className="flex gap-[-1px]">
                   {Array.from({ length: 8 }).map((item, index) => (
-                    <Asterisk strokeWidth={3} size={13} />
+                    <Asterisk strokeWidth={3} size={13} key={index}/>
                   ))}
                 </div>
               )}

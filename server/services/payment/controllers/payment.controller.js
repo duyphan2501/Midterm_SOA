@@ -53,7 +53,7 @@ const createPayment = async (req, res, next) => {
           payment,
           success: true,
         });
-    } 
+    }
 
     // Tạo OTP
     const { otpCode, otpExpireAt } = await generateNewOtpCode(
@@ -123,10 +123,11 @@ const processPayment = async (req, res, next) => {
         });
       } catch (err) {
         const statusCode = err.response?.status || 500;
-        console.log(statusCode)
-        if (statusCode === 401 || statusCode === 403)
+
+        if (statusCode === 404)
           return res.status(statusCode).json({
-            message: `Phiên đăng nhập đã hết hạn`,
+            message: `Thanh toán thất bại: Người dùng không tồn tại`,
+            payer: err.response?.data?.user || null,
             success: false,
           });
 
@@ -141,15 +142,14 @@ const processPayment = async (req, res, next) => {
           failReason
         );
 
-        console.error(err);
-
         await publishMessage(
           "payment_failed",
           JSON.stringify({ tuitionId: payment.tuition_id })
         );
 
         return res.status(statusCode).json({
-          message: `Thanh toán không thành công: ${failReason}`,
+          message: `Thanh toán thất bại: ${failReason}`,
+          payer: err.response?.data?.user || null,
           success: false,
         });
       }
@@ -205,10 +205,9 @@ const sendOtp = async (req, res, next) => {
 
     if (!paymentId) throw CreateError.BadRequest("Thiếu mã thanh toán");
 
-    const isPaid = await PaymentModel.checkSuccessPayment(paymentId)
+    const isPaid = await PaymentModel.checkSuccessPayment(paymentId);
 
-    if (isPaid)
-      throw CreateError.Conflict("Học phí đã được thanh toán")
+    if (isPaid) throw CreateError.Conflict("Học phí đã được thanh toán");
 
     await OtpModel.disableValidOtpByPaymentId(paymentId);
 
